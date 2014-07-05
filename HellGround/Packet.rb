@@ -74,6 +74,7 @@ module HellGround
     def uint32=(d) append('L', 4, d) end
     def uint64=(d) append('Q', 8, d) end
 
+    def hex(num); get(num).reverse.unpack('H*').first.hex end
     def uint32str=(s) append('a4', 4, s) end
 
     def str=(s)

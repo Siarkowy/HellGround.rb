@@ -89,16 +89,16 @@ module HellGround
       raise ArgumentError, "Packet missing" unless pk
 
       result = pk.skip(1).uint8
-      raise StandardError, RESULT_STRING[result] unless result == Auth::RESULT_SUCCESS
+      raise StandardError, Auth::RESULT_STRING[result] unless result == Auth::RESULT_SUCCESS
 
-      b = pk.get(32).reverse.unpack('H*').first.hex   # B
-     _g = pk.uint8                                    # size of g
-      g = pk.get(_g).reverse.unpack('H*').first.hex   # g
-     _n = pk.uint8                                    # size of N
-      n = pk.get(_n).reverse.unpack('H*').first.hex   # N
-     _s = pk.get(32).reverse.unpack('H*').first.hex   # s
-      t = pk.get(16).reverse.unpack('H*').first.hex   # unknown
-      f = pk.uint8                                    # flags
+      b = pk.hex(32)  # B
+     _g = pk.uint8    # size of g
+      g = pk.hex(_g)  # g
+     _n = pk.uint8    # size of N
+      n = pk.hex(_n)  # N
+     _s = pk.hex(32)  # s
+      t = pk.hex(16)  # unknown
+      f = pk.uint8    # flags
 
       k = Digest::SHA1.hexdigest("%064x%02x" % [n, g]).hex      # k = H(N|g)
       h = Digest::SHA1.hexdigest("#{@username}:#{@password}")   # h = H(I|:|P)
@@ -121,7 +121,10 @@ module HellGround
     def OnServerLogonProof(pk)
       raise ArgumentError, "Packet missing" unless pk
 
-      m2 = pk.skip(1).get(20).reverse.unpack('H*').first.hex
+      result = pk.uint8
+      raise StandardError, Auth::RESULT_STRING[result] unless result == Auth::RESULT_SUCCESS
+
+      m2 = pk.hex(20)
       accFlags = pk.uint32
       surveyId = pk.uint32
       unkFlags = pk.uint16
