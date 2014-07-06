@@ -33,6 +33,9 @@ module HellGround
       RESULT_FAIL_LOCKED_ENFORCED => 'You have applied a lock to your account',
     }
 
+    N = 0x894b645e89e1535bbdad5b8b290650530801b18ebfbf5e8fab3c82872a3e9bb7
+    G = 0x07
+
     class ClientLogonChallenge < Packet
       def initialize(username)
         super()
@@ -56,19 +59,25 @@ module HellGround
         self.uint32     = 0xF6876919            # ip
         self.uint8      = username.length       # namelen
         self.str        = username.upcase       # account
+
+        raise MalformedPacketError unless length == 34 + username.length
       end
     end
 
+    CRC_HASH = 0x209777f6b6271696354313032397265727748420
+
     class ClientLogonProof < Packet
-      def initialize(a, m1, crc_hash = 0)
+      def initialize(a, m1, crc_hash)
         super()
 
-        self.uint8  = CMD_AUTH_LOGON_PROOF      #type
-        self.str    = [a.to_s(16).reverse].pack('H64')  #A
-        self.str    = [m1.to_s(16).reverse].pack('H40') #M1
-        self.str    = [crc_hash.to_s(16).reverse].pack('H40') #crc_hash unused
-        self.uint8  = 0                         #num keys
-        self.uint8  = 0                         #sec flag
+        self.uint8  = CMD_AUTH_LOGON_PROOF  # type
+        self.hex    = [a, 20]               # A
+        self.hex    = [m1, 32]              # M1
+        self.hex    = [crc_hash, 20]        # crc_hash unused
+        self.uint8  = 0                     # num keys
+        self.uint8  = 0                     # sec flag
+
+        raise MalformedPacketError unless length == 75
       end
     end
   end
