@@ -24,6 +24,19 @@ module HellGround
     RESULT_FAIL_SUSPENDED         = 0x0C
     RESULT_FAIL_LOCKED_ENFORCED   = 0x10
 
+    # Realm flags
+    REALM_FLAG_NONE               = 0x00
+    REALM_FLAG_INVALID            = 0x01
+    REALM_FLAG_OFFLINE            = 0x02
+    REALM_FLAG_SPECIFYBUILD       = 0x04
+    REALM_FLAG_UNK1               = 0x08
+    REALM_FLAG_UNK2               = 0x10
+    REALM_FLAG_NEW_PLAYERS        = 0x20
+    REALM_FLAG_RECOMMENDED        = 0x40
+    REALM_FLAG_FULL               = 0x80
+
+    REALM_FLAG_SKIP               = REALM_FLAG_INVALID | REALM_FLAG_OFFLINE | REALM_FLAG_FULL
+
     RESULT_STRING = {
       RESULT_FAIL_BANNED          => 'This account has been closed and is no longer available for use',
       RESULT_FAIL_UNKNOWN_ACCOUNT => 'The information you have entered is not valid',
@@ -47,18 +60,18 @@ module HellGround
         self.uint8  = CMD_AUTH_LOGON_CHALLENGE  # type
         self.uint8  = 8                     # error
         self.uint16 = 30 + username.length  # size
-        self.str    = "\0WoW".reverse       # gamename
+        self.raw    = "\0WoW".reverse       # gamename
         self.uint8  = 2                     # version1
         self.uint8  = 4                     # version2
         self.uint8  = 3                     # version3
         self.uint16 = 8606                  # build
-        self.str    = "\0x86".reverse       # platform
-        self.str    = "\0Cha".reverse       # os
-        self.str    = "enGB".reverse        # locale
+        self.raw    = "\0x86".reverse       # platform
+        self.raw    = "\0Cha".reverse       # os
+        self.raw    = "enGB".reverse        # locale
         self.uint32 = 60                    # timezone
         self.uint32 = 0xf6876919            # ip
         self.uint8  = username.length       # namelen
-        self.str    = username.upcase       # account
+        self.raw    = username.upcase       # account
 
         raise PacketLengthError.new(self, 34 + username.length) unless length == 34 + username.length
       end
@@ -71,9 +84,9 @@ module HellGround
         super()
 
         self.uint8  = CMD_AUTH_LOGON_PROOF  # type
-        self.str    = a.hexpack(32)         # A
-        self.str    = m1.hexpack(20)        # M1
-        self.str    = crc_hash.hexpack(20)  # crc_hash unused
+        self.raw    = a.hexpack(32)         # A
+        self.raw    = m1.hexpack(20)        # M1
+        self.raw    = crc_hash.hexpack(20)  # crc_hash unused
         self.uint8  = 0                     # num keys
         self.uint8  = 0                     # sec flag
 

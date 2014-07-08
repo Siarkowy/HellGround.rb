@@ -63,6 +63,11 @@ module HellGround
       self
     end
 
+    # Returns packet's numeric type ID.
+    def type
+      @data[0].ord
+    end
+
     def int8;   read('c', 1) end
     def int16;  read('s', 2) end
     def int32;  read('l', 4) end
@@ -71,6 +76,20 @@ module HellGround
     def uint16; read('S', 2) end
     def uint32; read('L', 4) end
     def uint64; read('Q', 8) end
+    def float;  read('g', 4) end
+    def double; read('G', 8) end
+
+    # Reads a C string, discarding \0 char.
+    def str
+      ret = @data[@pos..(@data.index("\0", @pos))] # read with \0
+      @pos += ret.length
+      ret.delete("\0") # discard \0
+    end
+
+    # Converts big-endian packed bytes into a number.
+    def hex(num)
+      get(num).reverse.unpack('H*').first.hex # bytes need to be reversed
+    end
 
     def int8=(d)   append('c', 1, d) end
     def int16=(d)  append('s', 2, d) end
@@ -80,16 +99,20 @@ module HellGround
     def uint16=(d) append('S', 2, d) end
     def uint32=(d) append('L', 4, d) end
     def uint64=(d) append('Q', 8, d) end
+    def float=(d)  append('g', 4, d) end
+    def double=(d) append('G', 8, d) end
 
-    def hex(num)
-      get(num).reverse.unpack('H*').first.hex # bytes need to be reversed
-    end
-
-    def uint32str=(s) append('a4', 4, s) end
-
-    def str=(s)
+    # Appends raw byte string.
+    def raw=(s)
       @data << s
       @pos += s.length
+      self
+    end
+
+    # Appends param as C string.
+    def str=(s)
+      @data << s << "\0"
+      @pos += s.length.succ
       self
     end
 
@@ -112,16 +135,8 @@ module HellGround
     end
   end
 
-  class MalformedPacketError < StandardError; end
-
-  class PacketLengthError < MalformedPacketError
-    def initialize(pk, size)
-      @pk = pk
-      @size = size
-    end
-
-    def to_s
-      "<#{@pk.class}> #{@pk.length} instead of #{@size}"
-    end
-  end
+  class PacketError < StandardError; end
+  class MalformedPacketError < PacketError; end
+  class PacketLengthError < PacketError; end
+  class UnsupportedPacketError < PacketError; end
 end
