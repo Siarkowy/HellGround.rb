@@ -2,6 +2,13 @@
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
+class Numeric
+  # Returns byte representation of the number for packet storage.
+  def hexpack(bytes = 0)
+    ["%0#{2 * bytes}x" % self].pack('H*').reverse
+  end
+end
+
 module HellGround
   class Packet
     # Initializes empty packet.
@@ -75,12 +82,7 @@ module HellGround
     def uint64=(d) append('Q', 8, d) end
 
     def hex(num)
-      get(num).reverse.unpack('H*').first.hex
-    end
-
-    def hex=(args)
-      data, num = args
-      self.str = [data.to_s(16).reverse].pack('H%d' % (2 * num))
+      get(num).reverse.unpack('H*').first.hex # bytes need to be reversed
     end
 
     def uint32str=(s) append('a4', 4, s) end
@@ -104,7 +106,22 @@ module HellGround
       @pos += bytes
       self
     end
+
+    def to_s
+      "<#{self.class} len=#{length}>"
+    end
   end
 
   class MalformedPacketError < StandardError; end
+
+  class PacketLengthError < MalformedPacketError
+    def initialize(pk, size)
+      @pk = pk
+      @size = size
+    end
+
+    def to_s
+      "<#{@pk.class}> #{@pk.length} instead of #{@size}"
+    end
+  end
 end

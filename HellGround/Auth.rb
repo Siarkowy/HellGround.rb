@@ -44,40 +44,51 @@ module HellGround
         raise ArgumentError, "User name too short" if username.length == 0
         raise ArgumentError, "User name too long" if username.length > 32
 
-        self.uint8      = CMD_AUTH_LOGON_CHALLENGE  # type
-        self.uint8      = 8                     # error
-        self.uint16     = 30 + username.length  # size
-        self.uint32str  = 'WoW'.reverse         # gamename
-        self.uint8      = 2                     # version1
-        self.uint8      = 4                     # version2
-        self.uint8      = 3                     # version3
-        self.uint16     = 8606                  # build
-        self.uint32str  = 'x86'.reverse         # platform
-        self.uint32str  = 'Cha'.reverse         # os
-        self.uint32str  = 'enGB'.reverse        # locale
-        self.uint32     = 60                    # timezone
-        self.uint32     = 0xF6876919            # ip
-        self.uint8      = username.length       # namelen
-        self.str        = username.upcase       # account
+        self.uint8  = CMD_AUTH_LOGON_CHALLENGE  # type
+        self.uint8  = 8                     # error
+        self.uint16 = 30 + username.length  # size
+        self.str    = "\0WoW".reverse       # gamename
+        self.uint8  = 2                     # version1
+        self.uint8  = 4                     # version2
+        self.uint8  = 3                     # version3
+        self.uint16 = 8606                  # build
+        self.str    = "\0x86".reverse       # platform
+        self.str    = "\0Cha".reverse       # os
+        self.str    = "enGB".reverse        # locale
+        self.uint32 = 60                    # timezone
+        self.uint32 = 0xf6876919            # ip
+        self.uint8  = username.length       # namelen
+        self.str    = username.upcase       # account
 
-        raise MalformedPacketError unless length == 34 + username.length
+        raise PacketLengthError.new(self, 34 + username.length) unless length == 34 + username.length
       end
     end
 
-    CRC_HASH = 0x209777f6b6271696354313032397265727748420
+    CRC_HASH = 0x79776f6b72616953077962073e3c0762722e4748
 
     class ClientLogonProof < Packet
       def initialize(a, m1, crc_hash)
         super()
 
         self.uint8  = CMD_AUTH_LOGON_PROOF  # type
-        self.hex    = [a, 20]               # A
-        self.hex    = [m1, 32]              # M1
-        self.hex    = [crc_hash, 20]        # crc_hash unused
+        self.str    = a.hexpack(32)         # A
+        self.str    = m1.hexpack(20)        # M1
+        self.str    = crc_hash.hexpack(20)  # crc_hash unused
         self.uint8  = 0                     # num keys
         self.uint8  = 0                     # sec flag
 
-        raise MalformedPacketError unless length == 75
+        raise PacketLengthError.new(self, 75) unless length == 75
+      end
+    end
+
+    class ClientRealmList < Packet
+      def initialize
+        super()
+
+        self.uint8  = CMD_REALM_LIST        # type
+        self.uint32 = 0                     # pad
+
+        raise PacketLengthError.new(self, 5) unless length == 5
       end
     end
   end
