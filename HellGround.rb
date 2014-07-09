@@ -28,4 +28,4 @@ HellGround Core Ruby Chat Client ____ Siarkowy, 2014
 >
 end
 
-HellGround::connect
+HellGround::connect!

@@ -63,11 +63,6 @@ module HellGround
       self
     end
 
-    # Returns packet's numeric type ID.
-    def type
-      @data[0].ord
-    end
-
     def int8;   read('c', 1) end
     def int16;  read('s', 2) end
     def int32;  read('l', 4) end
