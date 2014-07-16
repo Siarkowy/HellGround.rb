@@ -293,6 +293,7 @@ module HellGround
       end
     end
 
-    class AuthError < StandardError; end
   end
+
+  class AuthError < StandardError; end
 end
