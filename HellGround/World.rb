@@ -68,13 +68,21 @@ module HellGround
         EM::stop_event_loop
       end
 
+      def sha1(str)
+        Digest::SHA1.digest(str).reverse.unpack('H*').first.hex
+      end
+
       def OnAuthChallenge(pk)
         raise ArgumentError, "PacketMissing" unless pk
         raise MalformedPacketError unless pk.length == 8
 
-        @seed = pk.uint32
+        @server_seed = pk.uint32
+        puts "Got server seed 0x#{@server_seed.to_s(16)}."
 
-        send_data ClientAuthSession.new
+        @client_seed = 0xBB40E64D
+        @digest = sha1(@username + (0).hexpack(4) + @client_seed.hexpack(4) + @server_seed.hexpack(4) + @key.hexpack(40))
+
+        send_data ClientAuthSession.new(@username, @client_seed, @digest)
       end
 
       SMSG_HANDLERS = {
@@ -83,16 +91,22 @@ module HellGround
     end
 
     class ClientAuthSession < Packet
-      def initialize
+      def initialize(username, seed, digest)
+        raise ArgumentError, "Username missing" unless username
+        raise ArgumentError, "Seed missing" unless seed
+        raise ArgumentError, "Digest missing" unless digest
         super()
 
-        self.uint16 = @username.length + 37 # size
+        self.uint8  = 0
+        self.uint8  = username.length + 37
         self.uint32 = CMSG_AUTH_SESSION     # type
         self.uint32 = 8606                  # build
-        self.str    = @username             # account
         self.uint32 = 0                     # unknown
-      # self.uint32 = ?                     # seed
-      # self.raw    = ?                     # digest
+        self.str    = username              # account
+        self.uint32 = seed                  # seed
+        self.raw    = digest.hexpack(20)    # digest
+
+        raise PacketLengthError unless length == username.length + 39
       end
     end
 
