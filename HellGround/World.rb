@@ -4,6 +4,8 @@
 
 module HellGround
   module World
+    # Server opcodes
+    SMSG_AUTH_CHALLENGE           = 0x01EC
     SMSG_CHAR_ENUM                = 0x003B
     SMSG_NAME_QUERY_RESPONSE      = 0x0051
     SMSG_CONTACT_LIST             = 0x0067
@@ -14,13 +16,34 @@ module HellGround
     SMSG_CHANNEL_NOTIFY           = 0x0099
     SMSG_CHANNEL_LIST             = 0x009B
     SMSG_NOTIFICATION             = 0x01CB
-    SMSG_AUTH_CHALLENGE           = 0x01EC
-    CMSG_AUTH_SESSION             = 0x01ED
     SMSG_AUTH_RESPONSE            = 0x01EE
     SMSG_LOGIN_VERIFY_WORLD       = 0x0236
     SMSG_CHAT_PLAYER_NOT_FOUND    = 0x02A9
     SMSG_USERLIST_ADD             = 0x03EF
     SMSG_USERLIST_UPDATE          = 0x03F1
+
+    # Client opcodes
+    CMSG_AUTH_SESSION             = 0x01ED
+    CMSG_CHAR_ENUM                = 0x0037
+    CMSG_PLAYER_LOGIN             = 0x003D
+    CMSG_LOGOUT_REQUEST           = 0x004B
+    CMSG_NAME_QUERY               = 0x0050
+    CMSG_ITEM_QUERY_SINGLE        = 0x0056
+    CMSG_QUEST_QUERY              = 0x005C
+    CMSG_WHO                      = 0x0062
+    CMSG_CONTACT_LIST             = 0x0066
+    CMSG_ADD_FRIEND               = 0x0069
+    CMSG_DEL_FRIEND               = 0x006A
+    CMSG_ADD_IGNORE               = 0x006C
+    CMSG_DEL_IGNORE               = 0x006D
+    CMSG_GUILD_ROSTER             = 0x0089
+    CMSG_MESSAGECHAT              = 0x0095
+    CMSG_JOIN_CHANNEL             = 0x0097
+    CMSG_LEAVE_CHANNEL            = 0x0098
+    CMSG_CHANNEL_LIST             = 0x009A
+    CMSG_EMOTE                    = 0x0102
+    CMSG_TEXT_EMOTE               = 0x0104
+    CMSG_ITEM_NAME_QUERY          = 0x02C4
 
     class Connection < EM::Connection
       def initialize(username, key)
@@ -29,7 +52,7 @@ module HellGround
       end
 
       def post_init
-        # send_data Packet.new
+        puts "World connection opened."
       end
 
       def receive_data(data)
@@ -73,7 +96,7 @@ module HellGround
       end
 
       def OnAuthChallenge(pk)
-        raise ArgumentError, "PacketMissing" unless pk
+        raise ArgumentError, "Packet missing" unless pk
         raise MalformedPacketError unless pk.length == 8
 
         @server_seed = pk.uint32
@@ -85,17 +108,27 @@ module HellGround
         send_data ClientAuthSession.new(@username, @client_seed, @digest)
       end
 
+      def OnAuthResponse(pk)
+        raise ArgumentError, "Packet missing" unless pk
+        raise AuthError, "Server authentication response error" unless pk.uint8 == 0x0C
+
+        # this should be encrypted
+        send_data ClientCharEnum.new
+      end
+
       SMSG_HANDLERS = {
-        SMSG_AUTH_CHALLENGE   => :OnAuthChallenge
+        SMSG_AUTH_CHALLENGE   => :OnAuthChallenge,
+        SMSG_AUTH_RESPONSE    => :OnAuthResponse,
       }
     end
 
     class ClientAuthSession < Packet
       def initialize(username, seed, digest)
+        super()
+
         raise ArgumentError, "Username missing" unless username
         raise ArgumentError, "Seed missing" unless seed
         raise ArgumentError, "Digest missing" unless digest
-        super()
 
         self.uint8  = 0
         self.uint8  = username.length + 37
@@ -107,6 +140,17 @@ module HellGround
         self.raw    = digest.hexpack(20)    # digest
 
         raise PacketLengthError unless length == username.length + 39
+      end
+    end
+
+    class ClientCharEnum < Packet
+      def initialize
+        super()
+
+        self.uint8 = 0
+        self.uint8 = CMSG_CHAR_ENUM
+
+        raise PacketLengthError unless length == 2
       end
     end
 
