@@ -16,7 +16,6 @@
 
 require_relative 'hellground/connection'
 
-unless ARGV.include? '--nologo'
 puts %q<
  _  _     _ _  ___                      _       _    
 | || |___| | |/ __|_ _ ___ _  _ _ _  __| |  _ _| |__ 
@@ -26,6 +25,5 @@ puts %q<
 HellGround Core Ruby Chat Client ____ Siarkowy, 2014
 
 >
-end
 
 HellGround::connect!

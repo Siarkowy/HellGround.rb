@@ -46,9 +46,53 @@ module HellGround
     CMSG_ITEM_NAME_QUERY          = 0x02C4
 
     class Connection < EM::Connection
+      class Crypto
+        CRYPTO_SEED = 0x38A78315F8922530719867B18C04E2AA
+
+        def initialize(key)
+          @send_i = @send_j = @recv_i = @recv_j = 0
+
+          seed    = ['%016x' % CRYPTO_SEED].pack('H*')
+          digest  = OpenSSL::Digest.new('sha1')
+          @key    = OpenSSL::HMAC.digest(digest, seed, key.hexpack)
+
+          raise StandardError, "Wrong key length" unless @key.length == 20
+        end
+
+        def decrypt(data)
+          ret = []
+
+          data.each_byte do |b|
+            @recv_i %= @key.length
+            x = (b - @recv_j) ^ @key[@recv_i].ord
+            @recv_i += 1
+            @recv_j = b
+            ret << x
+          end
+
+          ret.pack('c*')
+        end
+
+        def encrypt(data)
+          ret = []
+
+          data.each_byte do |b|
+            @send_i %= @key.length
+            x = (b ^ @key[@send_i].ord) + @send_j
+            @send_i += 1
+            @send_j = x
+            ret << x
+          end
+
+          ret.pack('c*')
+        end
+      end
+
+      include Utils
+
       def initialize(username, key)
+        @key      = key
         @username = username
-        @key = key
       end
 
       def post_init
@@ -56,28 +100,34 @@ module HellGround
       end
 
       def receive_data(data)
+        pk = Packet.new(data)
+        pk[0..3] = @crypto.decrypt pk[0..3] unless @crypto.nil?
+
         if VERBOSE
-          puts "Recv: length #{data.length}"
-          data.hexdump
+          puts "Recv: #{pk}"
+          pk.data.hexdump
         end
 
-        pk = Packet.new(data)
+        size  = pk.size16
+        cmd   = pk.uint16
 
-        handler = SMSG_HANDLERS[pk.skip(2).uint16]
-        self.method(handler).call(pk) if handler
+        handler = SMSG_HANDLERS[cmd]
+        method(handler).call(pk) if handler
       rescue AuthError => e
         puts "Authentication error: #{e.message}."
         stop!
-      rescue => e
-        puts "#{e.message}."
-        stop!
+      # rescue => e
+        # puts "#{e.message}."
+        # stop!
       end
 
       def send_data(pk)
         if VERBOSE
-          puts "Send:"
-          pk.dump
+          puts "Send: #{pk}"
+          pk.data.hexdump
         end
+
+        pk[0..5] = @crypto.encrypt pk[0..5] unless @crypto.nil?
 
         super(pk.data)
       end
@@ -91,28 +141,26 @@ module HellGround
         EM::stop_event_loop
       end
 
-      def sha1(str)
-        Digest::SHA1.digest(str).reverse.unpack('H*').first.hex
-      end
+      #
+      # Server packet handlers
+      #
 
       def OnAuthChallenge(pk)
-        raise ArgumentError, "Packet missing" unless pk
         raise MalformedPacketError unless pk.length == 8
 
         @server_seed = pk.uint32
-        puts "Got server seed 0x#{@server_seed.to_s(16)}."
-
         @client_seed = 0xBB40E64D
-        @digest = sha1(@username + (0).hexpack(4) + @client_seed.hexpack(4) + @server_seed.hexpack(4) + @key.hexpack(40))
+        @digest = sha1(@username + (0).hexpack(4) + @client_seed.hexpack(4) +
+                       @server_seed.hexpack(4) + @key.hexpack(40))
 
         send_data ClientAuthSession.new(@username, @client_seed, @digest)
+
+        @crypto = Crypto.new(@key)
       end
 
       def OnAuthResponse(pk)
-        raise ArgumentError, "Packet missing" unless pk
         raise AuthError, "Server authentication response error" unless pk.uint8 == 0x0C
 
-        # this should be encrypted
         send_data ClientCharEnum.new
       end
 
@@ -122,17 +170,17 @@ module HellGround
       }
     end
 
+    #
+    # Client packet handlers
+    #
+
     class ClientAuthSession < Packet
       def initialize(username, seed, digest)
         super()
 
-        raise ArgumentError, "Username missing" unless username
-        raise ArgumentError, "Seed missing" unless seed
-        raise ArgumentError, "Digest missing" unless digest
-
-        self.uint8  = 0
-        self.uint8  = username.length + 37
+        self.size16 = username.length + 37  # size
         self.uint32 = CMSG_AUTH_SESSION     # type
+
         self.uint32 = 8606                  # build
         self.uint32 = 0                     # unknown
         self.str    = username              # account
@@ -147,10 +195,10 @@ module HellGround
       def initialize
         super()
 
-        self.uint8 = 0
-        self.uint8 = CMSG_CHAR_ENUM
+        self.size16 = 4                     # size
+        self.uint32 = CMSG_CHAR_ENUM        # type
 
-        raise PacketLengthError unless length == 2
+        raise PacketLengthError unless length == 6
       end
     end
 

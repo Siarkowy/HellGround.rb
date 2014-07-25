@@ -6,11 +6,12 @@ require 'eventmachine'
 require 'hexdump'
 require 'io/console'
 
+require_relative 'Utils'
 require_relative 'Auth'
 require_relative 'World'
 
 module HellGround
-  VERBOSE = ARGV.include? '--verbose'
+  VERBOSE = ARGV.include?('--verbose') || ARGV.include?('-v')
 
   def self.connect!
     user = ARGV[(ARGV.index '--user') + 1].dup if ARGV.include? '--user'
@@ -28,7 +29,7 @@ module HellGround
     end
 
     EM::run do
-      EM::connect Auth::REALM_IP, Auth::REALM_PORT, Auth::Connection, user, pass
+      $conn = EM::connect(Auth::REALM_IP, Auth::REALM_PORT, Auth::Connection, user, pass)
     end
   end
 end

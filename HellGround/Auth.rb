@@ -58,6 +58,8 @@ module HellGround
     CRC_HASH = 0x79776f6b72616953077962073e3c0762722e4748
 
     class Connection < EM::Connection
+      include Utils
+
       def initialize(username, password)
         @username = username.upcase
         @password = password.upcase
@@ -72,14 +74,15 @@ module HellGround
       end
 
       def receive_data(data)
+        pk = Packet.new(data)
+
         if VERBOSE
-          puts "Recv: length #{data.length}"
-          data.hexdump
+          puts "Recv: #{pk}"
+          pk.data.hexdump
         end
 
-        pk = Packet.new(data)
         handler = SMSG_HANDLERS[pk.uint8]
-        self.method(handler).call(pk) if handler
+        method(handler).call(pk) if handler
       rescue AuthError => e
         puts "Authentication error: #{e.message}."
         stop!
@@ -90,8 +93,8 @@ module HellGround
 
       def send_data(pk)
         if VERBOSE
-          puts "Send:"
-          pk.dump
+          puts "Send: #{pk}"
+          pk.data.hexdump
         end
 
         super(pk.data)
@@ -106,8 +109,6 @@ module HellGround
       #
 
       def OnLogonChallenge(pk)
-        raise ArgumentError, "Packet missing" unless pk
-
         result = pk.skip(1).uint8
         raise StandardError, RESULT_STRING[result] unless result == RESULT_SUCCESS
 
@@ -161,13 +162,7 @@ module HellGround
         send_data ClientLogonProof.new(a, m1, CRC_HASH)
       end
 
-      def sha1(str)
-        Digest::SHA1.digest(str).reverse.unpack('H*').first.hex
-      end
-
       def OnLogonProof(pk)
-        raise ArgumentError, "Packet missing" unless pk
-
         result = pk.uint8
         raise AuthError, RESULT_STRING[result] unless result == RESULT_SUCCESS
 
@@ -185,8 +180,6 @@ module HellGround
       end
 
       def OnRealmList(pk)
-        raise ArgumentError, "Packet missing" unless pk
-
         @realms = []
 
         size = pk.uint16
@@ -225,7 +218,7 @@ module HellGround
         puts "Connecting to world server #{name} at #{host}:#{port}."
 
         close_connection
-        EM::connect host, port, World::Connection, @username, @key
+        $conn = EM::connect host, port, World::Connection, @username, @key
       end
 
       SMSG_HANDLERS = {
@@ -243,7 +236,6 @@ module HellGround
       def initialize(username)
         super()
 
-        raise ArgumentError, "User name missing" unless username
         raise ArgumentError, "User name too short" if username.length == 0
         raise ArgumentError, "User name too long" if username.length > 32
 

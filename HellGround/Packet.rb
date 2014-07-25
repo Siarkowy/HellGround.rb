@@ -2,13 +2,6 @@
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
-class Numeric
-  # Returns byte representation of the number for packet storage.
-  def hexpack(bytes = 0)
-    ["%0#{2 * bytes}x" % self].pack('H*').reverse
-  end
-end
-
 module HellGround
   class Packet
     # Initializes empty packet.
@@ -20,6 +13,14 @@ module HellGround
     # Returns packet content.
     def data
       @data
+    end
+
+    def [](key)
+      @data[key]
+    end
+
+    def []=(key, value)
+      @data[key] = value
     end
 
     # Displays packet info.
@@ -63,16 +64,49 @@ module HellGround
       self
     end
 
-    def int8;   read('c', 1) end
-    def int16;  read('s', 2) end
-    def int32;  read('l', 4) end
-    def int64;  read('q', 8) end
-    def uint8;  read('C', 1) end
-    def uint16; read('S', 2) end
-    def uint32; read('L', 4) end
-    def uint64; read('Q', 8) end
-    def float;  read('g', 4) end
-    def double; read('G', 8) end
+    def int8
+      read('c', 1)
+    end
+
+    def int16
+      read('s', 2)
+    end
+
+    def int32
+      read('l', 4)
+    end
+
+    def int64
+      read('q', 8)
+    end
+
+    def uint8
+      read('C', 1)
+    end
+
+    def uint16
+      read('S', 2)
+    end
+
+    def size16
+      read('S>', 2)
+    end
+
+    def uint32
+      read('L', 4)
+    end
+
+    def uint64
+      read('Q', 8)
+    end
+
+    def float
+      read('g', 4)
+    end
+
+    def double
+      read('G', 8)
+    end
 
     # Reads a C string, discarding \0 char.
     def str
@@ -86,16 +120,49 @@ module HellGround
       get(num).reverse.unpack('H*').first.hex # bytes need to be reversed
     end
 
-    def int8=(d)   append('c', 1, d) end
-    def int16=(d)  append('s', 2, d) end
-    def int32=(d)  append('l', 4, d) end
-    def int64=(d)  append('q', 8, d) end
-    def uint8=(d)  append('C', 1, d) end
-    def uint16=(d) append('S', 2, d) end
-    def uint32=(d) append('L', 4, d) end
-    def uint64=(d) append('Q', 8, d) end
-    def float=(d)  append('g', 4, d) end
-    def double=(d) append('G', 8, d) end
+    def int8=(d)
+      append('c', 1, d)
+    end
+
+    def int16=(d)
+      append('s', 2, d)
+    end
+
+    def int32=(d)
+      append('l', 4, d)
+    end
+
+    def int64=(d)
+      append('q', 8, d)
+    end
+
+    def uint8=(d)
+      append('C', 1, d)
+    end
+
+    def uint16=(d)
+      append('S', 2, d)
+    end
+
+    def size16=(d)
+      append('S>', 2, d)
+    end
+
+    def uint32=(d)
+      append('L', 4, d)
+    end
+
+    def uint64=(d)
+      append('Q', 8, d)
+    end
+
+    def float=(d)
+      append('g', 4, d)
+    end
+
+    def double=(d)
+      append('G', 8, d)
+    end
 
     # Appends raw byte string.
     def raw=(s)
@@ -111,6 +178,10 @@ module HellGround
       self
     end
 
+    def to_s
+      "<#{self.class} bytes:#{length}>"
+    end
+
     private
 
     def read(type, bytes)
@@ -123,10 +194,6 @@ module HellGround
       @data << [data].pack(type)
       @pos += bytes
       self
-    end
-
-    def to_s
-      "<#{self.class} len=#{length}>"
     end
   end
 
