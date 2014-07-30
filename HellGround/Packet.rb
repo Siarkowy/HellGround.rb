@@ -2,13 +2,11 @@
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
+require_relative 'Opcodes'
+
 module HellGround
   class Packet
-    # Initializes empty packet.
-    def initialize(data = '')
-      @data = data
-      @pos = 0
-    end
+    @@id = 0
 
     # Returns packet content.
     def data
@@ -25,8 +23,8 @@ module HellGround
 
     # Displays packet info.
     def dump
-       puts "Packet #{self.class}, length #{length}"
-       self.data.hexdump
+       puts self
+       data.hexdump
     end
 
     # Returns num bytes of data from packet and increments position by num.
@@ -178,8 +176,14 @@ module HellGround
       self
     end
 
-    def to_s
-      "<#{self.class} bytes:#{length}>"
+    protected
+
+    # Initializes empty packet.
+    def initialize(data = '')
+      @@id += 1
+
+      @data = data
+      @pos = 0
     end
 
     private
@@ -194,6 +198,49 @@ module HellGround
       @data << [data].pack(type)
       @pos += bytes
       self
+    end
+  end
+
+  module Auth
+    class Packet < HellGround::Packet
+      # Returns world packet opcode as reported by packet header.
+      def opcode
+        @data[0].unpack('C').first
+      end
+
+      def to_s
+        format "<Packet #%u bytes:0x%02X op:0x%02X %s>",
+          @@id, length, opcode, MSG.opcode_name(opcode) || '?'
+      end
+    end
+  end
+
+  module World
+    class Packet < HellGround::Packet
+      # Calculates packet size and yields buffer overflow and underflow.
+      # Overflow contains surplus byte string. Non-negative underflow indicates
+      # incomplete packet data and the operation should be repeated on new data.
+      def process
+        overflow  = @data[2 + hdrsize .. -1]
+        underflow = 2 + hdrsize - length
+
+        yield overflow, underflow
+      end
+
+      # Returns world packet length as reported by packet header.
+      def hdrsize
+        @data[0..1].unpack('S>').first
+      end
+
+      # Returns world packet opcode as reported by packet header.
+      def opcode
+        @data[2..3].unpack('S<').first
+      end
+
+      def to_s
+        format "<Packet #%u bytes:0x%02X size:0x%02X op:0x%04X %s>",
+          @@id, length, hdrsize, opcode, MSG.opcode_name(opcode) || '?'
+      end
     end
   end
 
