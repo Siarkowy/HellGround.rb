@@ -14,14 +14,18 @@ module HellGround::SlashCommands
     end
   end
 
-  def OnSlashSelect(cmd, args)
+  def OnSlashItem(cmd, args)
+    HellGround::World::Item.find(args.to_i) { |i| puts i; return }
+    send_data HellGround::World::ClientItemQuery.new(args.to_i)
+  end
+
+  def OnSlashLogin(cmd, args)
     return unless @chars
 
     char = @chars.select { |char| char.name == args }.first
 
     if char
       @player = char
-      @chars = nil
 
       puts "Logging in as #{char.name}."
       send_data HellGround::World::ClientPlayerLogin.new(char)
@@ -30,13 +34,29 @@ module HellGround::SlashCommands
     end
   end
 
+  def OnSlashLogout(cmd, args)
+    send_data HellGround::World::ClientLogoutRequest.new
+  end
+
+  def OnSlashQuest(cmd, args)
+    HellGround::World::Quest.find(args.to_i) { |q| puts q; return }
+    send_data HellGround::World::ClientQuestQuery.new(args.to_i)
+  end
+
   def OnSlashQuit(cmd, args)
     stop!
   end
 
+  def OnSlashWhois(cmd, args)
+    send_data HellGround::World::ClientNameQuery.new(args.to_i)
+  end
+
   SLASH_HANDLERS = {
-    :login    => :OnSlashSelect,
-    :select   => :OnSlashSelect,
-    :quit     => :OnSlashQuit
+    :item     => :OnSlashItem,
+    :login    => :OnSlashLogin,
+    :logout   => :OnSlashLogout,
+    :quest    => :OnSlashQuest,
+    :quit     => :OnSlashQuit,
+    :whois    => :OnSlashWhois,
   }
 end

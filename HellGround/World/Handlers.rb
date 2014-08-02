@@ -54,22 +54,60 @@ module HellGround::World
 
         if char
           @player = char
-          @chars = nil
 
           puts "Logging in as #{char.name}."
           send_data ClientPlayerLogin.new(char)
         end
       else
         puts "Select character:"
-        @chars.each { |char| puts " - #{char}" }
+        @chars.each { |char| puts " > #{char}" }
       end
     end
 
-    def SMSG_MESSAGECHAT(pk)
-      msg = ChatMessage.new(type: pk.uint8, lang: pk.uint32, guid: pk.uint64,
-        lang2: pk.uint32, guid2: pk.uint64, len: pk.uint32, msg: pk.str, tag: pk.uint8)
+    def SMSG_ITEM_QUERY_SINGLE_RESPONSE(pk)
+      id    = pk.uint32
+      return if id & Item::INVALID_FLAG > 0
+      name  = pk.skip(12).str
 
-      puts "Message: #{msg}"
+      Item.new(id, name)
+    end
+
+    def SMSG_LOGIN_VERIFY_WORLD(pk)
+      send_data ClientGuildRoster.new
+    end
+
+    def SMSG_LOGOUT_COMPLETE(pk)
+      @player = nil
+      puts "Logged out."
+      @chars.each { |char| puts " > #{char}" }
+    end
+
+    def SMSG_QUEST_QUERY_RESPONSE(pk)
+      id    = pk.uint32
+      name  = pk.skip(168).str
+
+      Quest.new(id, name)
+    end
+
+    def SMSG_MESSAGECHAT(pk)
+      type  = pk.uint8
+      lang  = pk.uint32
+      guid  = pk.uint64
+      lang2 = pk.uint32
+      guid2 = pk.uint64
+      len   = pk.uint32
+      text  = pk.str
+      tag   = pk.uint8
+
+      msg = ChatMessage.new(type, lang, guid, text)
+
+      if Character.find(guid)
+        puts msg
+      else
+        @msg_queue ||= []
+        @msg_queue.push msg
+        send_data ClientNameQuery.new(guid)
+      end
     end
 
     def SMSG_MOTD(pk)
@@ -78,6 +116,17 @@ module HellGround::World
       num.times do
         puts "[MOTD] #{pk.str}"
       end
+    end
+
+    def SMSG_NAME_QUERY_RESPONSE(pk)
+      guid  = pk.uint64
+      name  = pk.str
+      race  = pk.skip(1).uint32
+      cls   = pk.uint32
+
+      Character.new(guid, name, race, cls)
+
+      @msg_queue.select { |msg| msg.guid == guid }.each { |msg| puts msg } if @msg_queue
     end
 
     def SMSG_NOTIFICATION(pk)

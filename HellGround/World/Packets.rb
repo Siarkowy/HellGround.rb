@@ -25,8 +25,6 @@ module HellGround::World
       self.str    = username              # account
       self.uint32 = seed                  # seed
       self.raw    = digest.hexpack(20)    # digest
-
-      raise PacketLengthError unless length == username.length + 39
     end
   end
 
@@ -36,8 +34,6 @@ module HellGround::World
 
       self.size16 = 4
       self.uint32 = CMSG::CMSG_CHAR_ENUM
-
-      raise PacketLengthError unless length == 6
     end
   end
 
@@ -49,8 +45,6 @@ module HellGround::World
       self.uint32 = CMSG::CMSG_PLAYER_LOGIN
 
       self.uint64 = char.guid
-
-      raise PacketLengthError unless length == 14
     end
   end
 
@@ -58,35 +52,41 @@ module HellGround::World
     def initialize
       super()
 
-      self.size16 = 000
+      self.size16 = 4
       self.uint32 = CMSG::CMSG_LOGOUT_REQUEST
     end
   end
 
   class ClientNameQuery < Packet
-    def initialize
+    def initialize(guid)
       super()
 
-      self.size16 = 000
+      self.size16 = 12
       self.uint32 = CMSG::CMSG_NAME_QUERY
+
+      self.uint64 = guid
     end
   end
 
   class ClientItemQuery < Packet
-    def initialize
+    def initialize(id)
       super()
 
-      self.size16 = 000
+      self.size16 = 8
       self.uint32 = CMSG::CMSG_ITEM_QUERY_SINGLE
+
+      self.uint32 = id
     end
   end
 
   class ClientQuestQuery < Packet
-    def initialize
+    def initialize(id)
       super()
 
-      self.size16 = 000
+      self.size16 = 8
       self.uint32 = CMSG::CMSG_QUEST_QUERY
+
+      self.uint32 = id
     end
   end
 
@@ -103,8 +103,10 @@ module HellGround::World
     def initialize
       super()
 
-      self.size16 = 000
+      self.size16 = 8
       self.uint32 = CMSG::CMSG_CONTACT_LIST
+
+      self.uint32 = 0
     end
   end
 
@@ -148,7 +150,7 @@ module HellGround::World
     def initialize
       super()
 
-      self.size16 = 000
+      self.size16 = 4
       self.uint32 = CMSG::CMSG_GUILD_ROSTER
     end
   end

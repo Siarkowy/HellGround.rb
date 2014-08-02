@@ -2,7 +2,11 @@
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
+require_relative 'World/Character'
+require_relative 'World/ChatMessage'
+require_relative 'World/Item'
 require_relative 'World/Player'
+require_relative 'World/Quest'
 
 require_relative 'World/Crypto'
 require_relative 'World/Handlers'
@@ -83,36 +87,35 @@ module HellGround::World
           @decrskip = false
         end
 
-        # instantiate
+        # handle packet
         pk = Packet.new(@buf)
 
-        # handle packet
-        pk.process do |overflow, underflow|
-          if underflow > 0
-            @decrskip = true
-            return
-          end
-
-          @buf = overflow || ''
-          receive_packet(pk) if overflow
-          next
+        # wait for more data if needed
+        if pk.underflow > 0
+          @decrskip = true
+          return
         end
+
+        @buf = pk.overflow || ''
+        receive_packet(pk)
+        next
       end
+    end
+
+    def method_if_exists(sym)
+      method(sym)
+    rescue => e
+      nil
     end
 
     def receive_packet(pk)
       puts pk if HellGround::VERBOSE
 
       opcode = HellGround::MSG.opcode_name(pk.opcode).to_sym
-      handle = method(opcode) if opcode
+      handle = method_if_exists(opcode) if opcode
       handle.call(pk.skip(4)) if handle
-    rescue NameError => e
-      # skip unhandled packets
     rescue AuthError => e
       puts "Authentication error: #{e.message}."
-      stop!
-    rescue => e
-      puts "#{e.message}."
       stop!
     end
 

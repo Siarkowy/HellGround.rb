@@ -217,16 +217,6 @@ module HellGround
 
   module World
     class Packet < HellGround::Packet
-      # Calculates packet size and yields buffer overflow and underflow.
-      # Overflow contains surplus byte string. Non-negative underflow indicates
-      # incomplete packet data and the operation should be repeated on new data.
-      def process
-        overflow  = @data[2 + hdrsize .. -1]
-        underflow = 2 + hdrsize - length
-
-        yield overflow, underflow
-      end
-
       # Returns world packet length as reported by packet header.
       def hdrsize
         @data[0..1].unpack('S>').first
@@ -235,6 +225,16 @@ module HellGround
       # Returns world packet opcode as reported by packet header.
       def opcode
         @data[2..3].unpack('S<').first
+      end
+
+      # Returns extra data after the packet's end.
+      def overflow
+        @data[2 + hdrsize .. -1]
+      end
+
+      # Returns underflow number. Positive indicates an incomplete packet.
+      def underflow
+        2 + hdrsize - length
       end
 
       def to_s
