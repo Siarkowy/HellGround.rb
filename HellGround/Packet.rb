@@ -224,7 +224,7 @@ module HellGround
 
   module Auth
     class Packet < HellGround::Packet
-      # Returns auth packet opcode.
+      # Returns authentication packet opcode.
       # @return [Fixnum] Opcode.
       def opcode
         @data[0].unpack('C').first
@@ -232,7 +232,7 @@ module HellGround
 
       def to_s
         format "<Packet #%u bytes:0x%02X op:0x%02X %s>",
-          @@id, length, opcode, Opcodes.name(opcode) || '?'
+          @@id, length, opcode, MSG.name(opcode) || '?'
       end
     end
   end

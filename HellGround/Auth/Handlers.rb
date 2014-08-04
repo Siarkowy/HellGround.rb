@@ -12,6 +12,13 @@ module HellGround::Auth
     MSG_REALM_LIST                = 0x10
     MSG_XFER_INITIATE             = 0x30
     MSG_XFER_DATA                 = 0x31
+
+    # Returns authentication opcode name.
+    # @param opcode [Fixnum] Opcode to lookup.
+    # @return [String] Opcode name.
+    def self.name(opcode)
+      constants.find { |name| const_get(name) == opcode }
+    end
   end
 
   # Authentication results
