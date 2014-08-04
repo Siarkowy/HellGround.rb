@@ -4,15 +4,20 @@
 
 require_relative 'World/Character'
 require_relative 'World/ChatMessage'
+require_relative 'World/GuildMember'
 require_relative 'World/Item'
 require_relative 'World/Player'
 require_relative 'World/Quest'
+require_relative 'World/SocialInfo'
 
-require_relative 'World/Crypto'
+require_relative 'World/ChatMgr'
+require_relative 'World/CryptoMgr'
+require_relative 'World/GuildMgr'
 require_relative 'World/Handlers'
 require_relative 'World/Packets'
+require_relative 'World/SocialMgr'
 
-
+# World related code.
 module HellGround::World
   module SMSG
     SMSG_AUTH_CHALLENGE         = 0x01EC
@@ -33,30 +38,6 @@ module HellGround::World
     SMSG_USERLIST_UPDATE        = 0x03F1
   end
 
-  module CMSG
-    CMSG_AUTH_SESSION           = 0x01ED
-    CMSG_CHAR_ENUM              = 0x0037
-    CMSG_PLAYER_LOGIN           = 0x003D
-    CMSG_LOGOUT_REQUEST         = 0x004B
-    CMSG_NAME_QUERY             = 0x0050
-    CMSG_ITEM_QUERY_SINGLE      = 0x0056
-    CMSG_QUEST_QUERY            = 0x005C
-    CMSG_WHO                    = 0x0062
-    CMSG_CONTACT_LIST           = 0x0066
-    CMSG_ADD_FRIEND             = 0x0069
-    CMSG_DEL_FRIEND             = 0x006A
-    CMSG_ADD_IGNORE             = 0x006C
-    CMSG_DEL_IGNORE             = 0x006D
-    CMSG_GUILD_ROSTER           = 0x0089
-    CMSG_MESSAGECHAT            = 0x0095
-    CMSG_JOIN_CHANNEL           = 0x0097
-    CMSG_LEAVE_CHANNEL          = 0x0098
-    CMSG_CHANNEL_LIST           = 0x009A
-    CMSG_EMOTE                  = 0x0102
-    CMSG_TEXT_EMOTE             = 0x0104
-    CMSG_ITEM_NAME_QUERY        = 0x02C4
-  end
-
   class Connection < EM::Connection
     include HellGround::SlashCommands
     include HellGround::Utils
@@ -66,6 +47,10 @@ module HellGround::World
     def initialize(username, key)
       @key      = key
       @username = username
+
+      @chat     = ChatMgr.new self
+      @guild    = GuildMgr.new self
+      @social   = SocialMgr.new self
 
       @buf = ''
     end
@@ -111,7 +96,7 @@ module HellGround::World
     def receive_packet(pk)
       puts pk if HellGround::VERBOSE
 
-      opcode = HellGround::MSG.opcode_name(pk.opcode).to_sym
+      opcode = HellGround::Opcodes.name(pk.opcode).to_sym
       handle = method_if_exists(opcode) if opcode
       handle.call(pk.skip(4)) if handle
     rescue AuthError => e

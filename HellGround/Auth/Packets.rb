@@ -24,7 +24,7 @@ module HellGround::Auth
       self.raw    = "\0Cha".reverse       # os
       self.raw    = "enGB".reverse        # locale
       self.uint32 = 60                    # timezone
-      self.uint32 = 0xf6876919            # ip
+      self.uint32 = 0x0100A8C0            # ip
       self.uint8  = username.length       # namelen
       self.raw    = username.upcase       # account
 

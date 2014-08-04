@@ -2,7 +2,8 @@
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
-module HellGround::MSG
+# Complete list of opcodes used in WoW protocol.
+module HellGround::Opcodes
   MSG_NULL_ACTION                                 = 0x000
   CMSG_BOOTME                                     = 0x001
   CMSG_DBLOOKUP                                   = 0x002
@@ -1064,7 +1065,10 @@ module HellGround::MSG
   SMSG_SPLINE_MOVE_UNSET_FLYING                   = 0x422
   SMSG_SUMMON_CANCEL                              = 0x423
 
-  def self.opcode_name(value)
-    constants.find { |name| const_get(name) == value }
+  # Returns opcode name.
+  # @param opcode [Fixnum] Opcode to lookup.
+  # @return [String] Opcode name.
+  def self.name(opcode)
+    constants.find { |name| const_get(name) == opcode }
   end
 end

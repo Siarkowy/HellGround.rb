@@ -12,10 +12,6 @@ module HellGround::Auth
     MSG_REALM_LIST                = 0x10
     MSG_XFER_INITIATE             = 0x30
     MSG_XFER_DATA                 = 0x31
-
-    def self.opcode_name(value)
-      constants.find { |name| const_get(name) == value }
-    end
   end
 
   # Authentication results
@@ -68,8 +64,8 @@ module HellGround::Auth
       t = pk.hex(16)    # unknown
       f = pk.uint8      # flags
 
-      raise MalformedPacketError, "Got wrong N from server" unless n == N
-      raise MalformedPacketError, "Got wrong g from server" unless g == G
+      raise Packet::MalformedError, "Got wrong N from server" unless n == N
+      raise Packet::MalformedError, "Got wrong g from server" unless g == G
 
       k = 3
       i = sha1("#{@username}:#{@password}")       # i = H(C|:|P)
@@ -79,7 +75,7 @@ module HellGround::Auth
       a = g.to_bn.mod_exp(_a, n).to_i             # A  = g ** a % N
 
       # check whether A % N == 0
-      raise MalformedPacketError, "Public key equal zero" if a.to_bn.mod_exp(1, n) == 0
+      raise Packet::MalformedError, "Public key equal zero" if a.to_bn.mod_exp(1, n) == 0
 
       # u = H(A|B)
       u = sha1(a.hexpack(32) + b.hexpack(32))

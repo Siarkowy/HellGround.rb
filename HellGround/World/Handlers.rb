@@ -3,34 +3,33 @@
 # See LICENSE file for more information on licensing.
 
 module HellGround::World
+  # Server packet handlers.
+  #
+  # All server packets begin with 4 byte header consisting of:
+  #   uint16 - packet size (big endian)
+  #   uint16 - opcode number (little endian)
+  #
+  # Headers after +SMSG_AUTH_CHALLENGE+ packet are encrypted. Packet contents
+  # are not encrypted. All numeric data is little endian. Only the packet
+  # size field of the header is sent as big endian.
   module Handlers
-    # Server packet handlers
-    #
-    # All server packets begin with 4 byte header consisting of:
-    #   uint16 - packet size (big endian)
-    #   uint16 - opcode number (little endian)
-    #
-    # Headers after SMSG_AUTH_CHALLENGE packet are encrypted. Packet contents
-    # are not encrypted. All numeric data is little endian. Only the packet
-    # size field of the header is sent as big endian.
-
     def SMSG_AUTH_CHALLENGE(pk)
-      raise MalformedPacketError unless pk.length == 8
+      raise Packet::MalformedError unless pk.length == 8
 
       @server_seed = pk.uint32
       @client_seed = 0xBB40E64D
       @digest = sha1(@username + (0).hexpack(4) + @client_seed.hexpack(4) +
                      @server_seed.hexpack(4) + @key.hexpack(40))
 
-      send_data ClientAuthSession.new(@username, @client_seed, @digest)
+      send_data Packets::ClientAuthSession.new(@username, @client_seed, @digest)
 
-      @crypto = Crypto.new(@key)
+      @crypto = CryptoMgr.new(@key)
     end
 
     def SMSG_AUTH_RESPONSE(pk)
       raise AuthError, "Server authentication response error" unless pk.uint8 == 0x0C
 
-      send_data ClientCharEnum.new
+      send_data Packets::ClientCharEnum.new
     end
 
     def SMSG_CHAR_ENUM(pk)
@@ -44,7 +43,7 @@ module HellGround::World
         race  = pk.uint8
         cls   = pk.uint8
         level = pk.skip(6).uint8
-        pk.skip(221) # location, pet information, inventory data
+        pk.skip(221) # location, pet info, inventory data
 
         @chars << Player.new(guid, name, level, race, cls)
       end
@@ -56,12 +55,74 @@ module HellGround::World
           @player = char
 
           puts "Logging in as #{char.name}."
-          send_data ClientPlayerLogin.new(char)
+          send_data Packets::ClientPlayerLogin.new(char)
         end
       else
         puts "Select character:"
         @chars.each { |char| puts " > #{char}" }
       end
+    end
+
+    def SMSG_CHAT_PLAYER_NOT_FOUND(pk)
+      puts "Player #{pk.str} not found."
+    end
+
+    def SMSG_CONTACT_LIST(pk)
+      pk.skip(4).uint32.times do
+        guid  = pk.uint64
+        flags = pk.uint32
+        note  = pk.str
+
+        if flags & SocialInfo::SOCIAL_FLAG_FRIEND > 0
+          status = pk.uint8
+
+          unless status == SocialInfo::FRIEND_STATUS_OFFLINE
+            area  = pk.uint32
+            level = pk.uint32
+            cls   = pk.uint32
+          end
+        end
+
+        social = @social.find(guid)
+
+        if social
+          social.update(flags, note, status, area, level, cls)
+        else
+          @social.introduce SocialInfo.new(guid, flags, note, status, area, level, cls)
+        end
+      end
+    end
+
+    def SMSG_GUILD_ROSTER(pk)
+      num   = pk.uint32
+      motd  = pk.str
+      ginfo = pk.str
+
+      pk.uint32.times { pk.skip 56 } # rank info
+
+      num.times do
+        guid  = pk.uint64
+        online = pk.uint8
+        name  = pk.str
+        rank  = pk.uint32
+        level = pk.uint8
+        cls   = pk.uint8
+        zone  = pk.skip(1).uint32
+        offline_time = pk.float * 86400 if online == 0
+        note  = pk.str
+        onote = pk.str
+
+        member = @guild.find(guid)
+
+        if member
+          member.update(online, rank, level, zone, offline_time, note, onote)
+        else
+          @guild.introduce GuildMember.new(guid, name, nil, cls, online, rank, level, zone, offline_time, note, onote)
+        end
+      end
+
+      puts 'Guild roster:'
+      puts @guild
     end
 
     def SMSG_ITEM_QUERY_SINGLE_RESPONSE(pk)
@@ -73,13 +134,17 @@ module HellGround::World
     end
 
     def SMSG_LOGIN_VERIFY_WORLD(pk)
-      send_data ClientGuildRoster.new
+      puts "Login successful."
+
+      send_data Packets::ClientGuildRoster.new
+      @chat.join "world"
     end
 
     def SMSG_LOGOUT_COMPLETE(pk)
       @player = nil
-      puts "Logged out."
-      @chars.each { |char| puts " > #{char}" }
+      puts "Logout successful."
+
+      send_data Packets::ClientCharEnum.new
     end
 
     def SMSG_QUEST_QUERY_RESPONSE(pk)
@@ -94,28 +159,17 @@ module HellGround::World
       lang  = pk.uint32
       guid  = pk.uint64
       lang2 = pk.uint32
+      chan  = pk.str if type == ChatMessage::CHAT_MSG_CHANNEL
       guid2 = pk.uint64
       len   = pk.uint32
       text  = pk.str
       tag   = pk.uint8
 
-      msg = ChatMessage.new(type, lang, guid, text)
-
-      if Character.find(guid)
-        puts msg
-      else
-        @msg_queue ||= []
-        @msg_queue.push msg
-        send_data ClientNameQuery.new(guid)
-      end
+      @chat.receive ChatMessage.new(type, lang, guid, text, chan)
     end
 
     def SMSG_MOTD(pk)
-      num = pk.uint32
-
-      num.times do
-        puts "[MOTD] #{pk.str}"
-      end
+      pk.uint32.times { puts "[MOTD] #{pk.str}" }
     end
 
     def SMSG_NAME_QUERY_RESPONSE(pk)
@@ -124,9 +178,7 @@ module HellGround::World
       race  = pk.skip(1).uint32
       cls   = pk.uint32
 
-      Character.new(guid, name, race, cls)
-
-      @msg_queue.select { |msg| msg.guid == guid }.each { |msg| puts msg } if @msg_queue
+      @chat.introduce Character.new(guid, name, race, cls)
     end
 
     def SMSG_NOTIFICATION(pk)

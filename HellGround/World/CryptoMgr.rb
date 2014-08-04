@@ -3,9 +3,11 @@
 # See LICENSE file for more information on licensing.
 
 module HellGround::World
-  class Crypto
-    CRYPTO_SEED = 0x38A78315F8922530719867B18C04E2AA
+  # Packet encryption manager.
+  class CryptoMgr
+    CRYPTO_SEED = 0x38A78315F8922530719867B18C04E2AA  # Client HMAC seed.
 
+    # @param key [Fixnum] Encryption key, calculated during authentication process.
     def initialize(key)
       @send_i = @send_j = @recv_i = @recv_j = 0
 
@@ -16,6 +18,9 @@ module HellGround::World
       raise StandardError, "Wrong key length" unless @key.length == 20
     end
 
+    # Decrypts byte string.
+    # @param data [String] Byte string.
+    # @return [String] Decrypted byte string.
     def decrypt(data)
       ret = []
 
@@ -30,6 +35,9 @@ module HellGround::World
       ret.pack('c*')
     end
 
+    # Encrypts byte string.
+    # @param data [String] Byte string.
+    # @return [String] Encrypted byte string.
     def encrypt(data)
       ret = []
 
