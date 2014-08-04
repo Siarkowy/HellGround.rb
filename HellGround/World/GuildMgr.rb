@@ -38,8 +38,14 @@ module HellGround::World
       @roster
     end
 
+    # Returns guild roster sorted by online flag.
+    # @return [Hash<Fixnum, GuildMember>] Guild roster.
+    def roster_sorted
+      Hash[@roster.sort_by{ |guid, char| char.online }.reverse]
+    end
+
     def to_s
-      @roster.map { |guid, char| char.to_s }.join("\n")
+      roster_sorted.map { |guid, char| char.to_s }.join("\n")
     end
   end
 end

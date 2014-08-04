@@ -56,7 +56,7 @@ module HellGround::World
 
     ChatTypes = {
       CHAT_MSG_ADDON    => "Addon",
-      CHAT_MSG_CHANNEL  => "Channel".
+      CHAT_MSG_CHANNEL  => "Channel",
       CHAT_MSG_GUILD    => "Guild",
       CHAT_MSG_OFFICER  => "Officer",
       CHAT_MSG_PARTY    => "Party",

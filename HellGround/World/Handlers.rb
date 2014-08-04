@@ -32,6 +32,13 @@ module HellGround::World
       send_data Packets::ClientCharEnum.new
     end
 
+    def SMSG_CHANNEL_NOTIFY(pk)
+      type  = pk.uint8
+      name  = pk.str
+
+      puts ChannelNotification.new(type, name)
+    end
+
     def SMSG_CHAR_ENUM(pk)
       @chars = []
 
@@ -83,6 +90,8 @@ module HellGround::World
           end
         end
 
+        send_data Packets::ClientNameQuery.new(guid) unless Character.find(guid)
+
         social = @social.find(guid)
 
         if social
@@ -91,6 +100,10 @@ module HellGround::World
           @social.introduce SocialInfo.new(guid, flags, note, status, area, level, cls)
         end
       end
+    end
+
+    def SMSG_FRIEND_STATUS(pk)
+      send_data Packets::ClientContactList.new
     end
 
     def SMSG_GUILD_ROSTER(pk)
@@ -169,7 +182,7 @@ module HellGround::World
     end
 
     def SMSG_MOTD(pk)
-      pk.uint32.times { puts "[MOTD] #{pk.str}" }
+      pk.uint32.times { puts "<MOTD> #{pk.str}" }
     end
 
     def SMSG_NAME_QUERY_RESPONSE(pk)
@@ -182,7 +195,7 @@ module HellGround::World
     end
 
     def SMSG_NOTIFICATION(pk)
-      puts "[Notification] #{pk.str}"
+      puts "<Notification> #{pk.str}"
     end
   end
 end

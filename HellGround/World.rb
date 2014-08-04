@@ -2,6 +2,7 @@
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
+require_relative 'World/ChannelNotification'
 require_relative 'World/Character'
 require_relative 'World/ChatMessage'
 require_relative 'World/GuildMember'

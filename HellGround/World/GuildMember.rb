@@ -31,8 +31,8 @@ module HellGround::World
     end
 
     def to_s
-      "<#{@name}:#{@level}>\t#{Classes[@cls]}\t" +
-      "#{@note || '---'}\t#{@onote || '---'}\t#{@online == 1 ? '<online>' : ''}"
+      format '%-16s %2d %-10s %-22.22s %-22.22s %s', @name, @level, Classes[@cls], @note,
+        @onote, @online == 1 ? 'on' : ''
     end
   end
 end

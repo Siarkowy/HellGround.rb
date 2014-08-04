@@ -31,6 +31,15 @@ module HellGround::SlashCommands
     end
   end
 
+  def OnSlashFriend(cmd, args)
+    @social.friend args unless args.empty?
+  end
+
+  def OnSlashFriends(cmd, args)
+    puts 'Friends:'
+    @social.friends.each { |guid, social| puts social.to_char }
+  end
+
   def OnSlashGuild(cmd, args)
     @chat.send World::ChatMessage.new(
       World::ChatMessage::CHAT_MSG_GUILD,
@@ -44,6 +53,15 @@ module HellGround::SlashCommands
     puts "Available commands are:"
     SLASH_HANDLERS.each { |cmd, meth| print format '%-10s', "/#{cmd}" }
     puts
+  end
+
+  def OnSlashIgnore(cmd, args)
+    @social.ignore args unless args.empty?
+  end
+
+  def OnSlashIgnores(cmd, args)
+    puts 'Ignores:'
+    @social.ignores.each { |guid, social| puts social.to_char }
   end
 
   def OnSlashItem(cmd, args)
@@ -130,6 +148,14 @@ module HellGround::SlashCommands
     )
   end
 
+  def OnSlashUnfriend(cmd, args)
+    @social.unfriend args unless args.empty?
+  end
+
+  def OnSlashUnignore(cmd, args)
+    @social.unignore args unless args.empty?
+  end
+
   def OnSlashWhisper(cmd, args)
     args.match(/(\S+)\s*(.+)/) do |m|
       @whisper_target = m[1]
@@ -158,33 +184,39 @@ module HellGround::SlashCommands
   end
 
   SLASH_HANDLERS = {
-    :help     => :OnSlashHelp,    # lists available commands
-    :"?"      => :OnSlashHelp,
+    :help       => :OnSlashHelp,        # lists available commands
+    :"?"        => :OnSlashHelp,
 
-    :channel  => :OnSlashChannel, # sends channel message
-    :c        => :OnSlashChannel,
-    :guild    => :OnSlashGuild,   # sends guild message
-    :g        => :OnSlashGuild,
-    :item     => :OnSlashItem,    # item lookup
-    :join     => :OnSlashJoin,    # joins a channel
-    :leave    => :OnSlashLeave,   # leaves a channel
-    :login    => :OnSlashLogin,   # character selection
-    :logout   => :OnSlashLogout,  # logout request
-    :officer  => :OnSlashOfficer, # sends officer message
-    :o        => :OnSlashOfficer,
-    :party    => :OnSlashParty,   # sends party message
-    :p        => :OnSlashParty,
-    :reply    => :OnSlashReply,   # replies last whisper target
-    :r        => :OnSlashReply,
-    :quest    => :OnSlashQuest,   # quest lookup
-    :quit     => :OnSlashQuit,    # quits
-    :roster   => :OnSlashRoster,  # guild roster query
-    :say      => :OnSlashSay,     # says
-    :s        => :OnSlashSay,
-    :yell     => :OnSlashYell,    # yells
-    :y        => :OnSlashYell,
-    :whisper  => :OnSlashWhisper, # whispers
-    :w        => :OnSlashWhisper,
-    :whois    => :OnSlashWhois,   # who query
+    :channel    => :OnSlashChannel,     # sends channel message
+    :c          => :OnSlashChannel,
+    :guild      => :OnSlashGuild,       # sends guild message
+    :friend     => :OnSlashFriend,      # adds a friend
+    :friends    => :OnSlashFriends,     # lists friends
+    :g          => :OnSlashGuild,
+    :ignore     => :OnSlashIgnore,      # ignores a player
+    :ignores    => :OnSlashIgnores,     # lists ignores
+    :item       => :OnSlashItem,        # item lookup
+    :join       => :OnSlashJoin,        # joins a channel
+    :leave      => :OnSlashLeave,       # leaves a channel
+    :login      => :OnSlashLogin,       # character selection
+    :logout     => :OnSlashLogout,      # logout request
+    :officer    => :OnSlashOfficer,     # sends officer message
+    :o          => :OnSlashOfficer,
+    :party      => :OnSlashParty,       # sends party message
+    :p          => :OnSlashParty,
+    :reply      => :OnSlashReply,       # replies last whisper target
+    :r          => :OnSlashReply,
+    :quest      => :OnSlashQuest,       # quest lookup
+    :quit       => :OnSlashQuit,        # quits
+    :roster     => :OnSlashRoster,      # guild roster query
+    :say        => :OnSlashSay,         # says
+    :s          => :OnSlashSay,
+    :yell       => :OnSlashYell,        # yells
+    :y          => :OnSlashYell,
+    :unfriend   => :OnSlashUnfriend,    # deletes a friend
+    :unignore   => :OnSlashUnignore,    # deletes an ignore
+    :whisper    => :OnSlashWhisper,     # whispers
+    :w          => :OnSlashWhisper,
+    :whois      => :OnSlashWhois,       # who query
   }
 end

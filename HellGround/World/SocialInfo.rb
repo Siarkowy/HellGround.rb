@@ -28,6 +28,8 @@ module HellGround::World
       update(flags, note, status, zone, level, cls)
     end
 
+    # Updates social info with new data.
+    # @see #initialize
     def update(flags, note, status, area, level, cls)
       @flags  = flags
       @note   = note
@@ -35,6 +37,10 @@ module HellGround::World
       @zone   = zone
       @level  = level
       @cls    = cls
+    end
+
+    def to_char
+      Character.find(@guid)
     end
   end
 end
