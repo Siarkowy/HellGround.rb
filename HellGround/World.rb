@@ -2,21 +2,7 @@
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
-require_relative 'World/ChannelNotification'
-require_relative 'World/Character'
-require_relative 'World/ChatMessage'
-require_relative 'World/GuildMember'
-require_relative 'World/Item'
-require_relative 'World/Player'
-require_relative 'World/Quest'
-require_relative 'World/SocialInfo'
-
-require_relative 'World/ChatMgr'
-require_relative 'World/CryptoMgr'
-require_relative 'World/GuildMgr'
-require_relative 'World/Handlers'
-require_relative 'World/Packets'
-require_relative 'World/SocialMgr'
+require_relative 'World/Includes'
 
 # World related code.
 module HellGround::World
