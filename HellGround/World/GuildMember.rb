@@ -4,11 +4,12 @@
 
 module HellGround::World
   # Guild member object.
-  class GuildMember < Character
-    attr_reader :online, :rank, :level, :zone, :offline_time, :note, :onote
+  class GuildMember
+    attr_reader :guid, :online, :rank, :level, :zone, :offline_time, :note, :onote
 
-    def initialize(guid, name, race, cls, *args)
-      super(guid, name, race, cls)
+    # @param guid [Fixnum] Character GUID.
+    def initialize(guid, *args)
+      @guid = guid
       update(*args)
     end
 
@@ -30,9 +31,17 @@ module HellGround::World
       @onote  = onote.empty? ? nil : onote
     end
 
+    # Returns character object.
+    # @return [Character] Character.
+    def to_char
+      Character.find(@guid)
+    end
+
     def to_s
-      format '%-16s %2d %-10s %-22.22s %-22.22s %s', @name, @level, Classes[@cls], @note,
-        @onote, @online == 1 ? 'on' : ''
+      char = to_char
+
+      format '%-16s %2d %-10s %-22.22s %-22.22s %s', char.name, @level,
+        Character::Classes[char.cls], @note, @onote, @online == 1 ? 'on' : ''
     end
   end
 end

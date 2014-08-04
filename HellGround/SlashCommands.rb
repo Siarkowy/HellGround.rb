@@ -41,6 +41,8 @@ module HellGround::SlashCommands
   end
 
   def OnSlashGuild(cmd, args)
+    return if args.empty?
+
     @chat.send World::ChatMessage.new(
       World::ChatMessage::CHAT_MSG_GUILD,
       @player.lang,
@@ -65,28 +67,31 @@ module HellGround::SlashCommands
   end
 
   def OnSlashItem(cmd, args)
-    World::Item.find(args.to_i) { |i| puts i; return }
-    send_data World::Packets::ClientItemQuery.new(args.to_i)
+    return if args.empty?
+
+    if item = World::Item.find(args.to_i)
+      puts item
+    else
+      send_data World::Packets::ClientItemQuery.new(args.to_i)
+    end
   end
 
   def OnSlashJoin(cmd, args)
-    @chat.join args
+    @chat.join args unless args.empty?
   end
 
   def OnSlashLeave(cmd, args)
-    @chat.leave args
+    @chat.leave args unless args.empty?
   end
 
   def OnSlashLogin(cmd, args)
-    return unless @chars
+    return if @chars.nil? || args.empty?
 
-    char = @chars.select { |char| char.name == args }.first
+    if player = @chars.select { |player| player.to_char.name == args }.first
+      @player = player
 
-    if char
-      @player = char
-
-      puts "Logging in as #{char.name}."
-      send_data World::Packets::ClientPlayerLogin.new(char)
+      puts "Logging in as #{player.to_char.name}."
+      send_data World::Packets::ClientPlayerLogin.new(player)
     else
       puts "Character not found."
     end
@@ -97,6 +102,8 @@ module HellGround::SlashCommands
   end
 
   def OnSlashOfficer(cmd, args)
+    return if args.empty?
+
     @chat.send World::ChatMessage.new(
       World::ChatMessage::CHAT_MSG_OFFICER,
       @player.lang,
@@ -106,6 +113,8 @@ module HellGround::SlashCommands
   end
 
   def OnSlashParty(cmd, args)
+    return if args.empty?
+
     @chat.send World::ChatMessage.new(
       World::ChatMessage::CHAT_MSG_PARTY,
       @player.lang,
@@ -115,8 +124,13 @@ module HellGround::SlashCommands
   end
 
   def OnSlashQuest(cmd, args)
-    World::Quest.find(args.to_i) { |q| puts q; return }
-    send_data World::Packets::ClientQuestQuery.new(args.to_i)
+    return if args.empty?
+
+    if quest = World::Quest.find(args.to_i)
+      puts quest
+    else
+      send_data World::Packets::ClientQuestQuery.new(args.to_i)
+    end
   end
 
   def OnSlashQuit(cmd, args)
@@ -124,7 +138,7 @@ module HellGround::SlashCommands
   end
 
   def OnSlashReply(cmd, args)
-    return unless @whisper_target
+    return if @whisper_target.nil? || args.empty?
 
     @chat.send World::ChatMessage.new(
       World::ChatMessage::CHAT_MSG_WHISPER,
@@ -140,6 +154,8 @@ module HellGround::SlashCommands
   end
 
   def OnSlashSay(cmd, args)
+    return if args.empty?
+
     @chat.send World::ChatMessage.new(
       World::ChatMessage::CHAT_MSG_SAY,
       @player.lang,
@@ -171,6 +187,8 @@ module HellGround::SlashCommands
   end
 
   def OnSlashYell(cmd, args)
+    return if args.empty?
+
     @chat.send World::ChatMessage.new(
       World::ChatMessage::CHAT_MSG_YELL,
       @player.lang,
@@ -180,7 +198,7 @@ module HellGround::SlashCommands
   end
 
   def OnSlashWhois(cmd, args)
-    send_data World::Packets::ClientNameQuery.new(args.to_i)
+    send_data World::Packets::ClientNameQuery.new(args.to_i) unless args.empty?
   end
 
   SLASH_HANDLERS = {

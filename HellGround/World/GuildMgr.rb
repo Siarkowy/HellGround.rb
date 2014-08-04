@@ -44,6 +44,22 @@ module HellGround::World
       Hash[@roster.sort_by{ |guid, char| char.online }.reverse]
     end
 
+    # Updates guild member data.
+    # @param guid [Fixnum] Character GUID.
+    # @param name [String] Name.
+    # @param race [Fixnum] Race.
+    # @param cls [Fixnum] Class.
+    # @param args [Splat] Extra arguments, see {GuildMember#update}.
+    def update(guid, name, race, cls, *args)
+      Character.new(guid, name, race, cls) unless Character.find(guid)
+
+      if member = find(guid)
+        member.update(*args)
+      else
+        introduce GuildMember.new(guid, *args)
+      end
+    end
+
     def to_s
       roster_sorted.map { |guid, char| char.to_s }.join("\n")
     end

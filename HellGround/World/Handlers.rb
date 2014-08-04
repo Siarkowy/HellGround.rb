@@ -56,17 +56,17 @@ module HellGround::World
       end
 
       if HellGround::CHAR
-        char = @chars.select { |char| char.name == HellGround::CHAR }.first
+        player = @chars.select { |player| player.to_char.name == HellGround::CHAR }.first
 
-        if char
-          @player = char
+        if player
+          @player = player
 
-          puts "Logging in as #{char.name}."
-          send_data Packets::ClientPlayerLogin.new(char)
+          puts "Logging in as #{player.to_char.name}."
+          send_data Packets::ClientPlayerLogin.new(player)
         end
       else
         puts "Select character:"
-        @chars.each { |char| puts " > #{char}" }
+        @chars.each { |player| puts " > #{player.to_char}" }
       end
     end
 
@@ -125,13 +125,7 @@ module HellGround::World
         note  = pk.str
         onote = pk.str
 
-        member = @guild.find(guid)
-
-        if member
-          member.update(online, rank, level, zone, offline_time, note, onote)
-        else
-          @guild.introduce GuildMember.new(guid, name, nil, cls, online, rank, level, zone, offline_time, note, onote)
-        end
+        @guild.update(guid, name, nil, cls, online, rank, level, zone, offline_time, note, onote)
       end
 
       puts 'Guild roster:'
