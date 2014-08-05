@@ -35,10 +35,6 @@ module HellGround::World
       @key      = key
       @username = username
 
-      @chat     = ChatMgr.new self
-      @guild    = GuildMgr.new self
-      @social   = SocialMgr.new self
-
       @buf = ''
     end
 

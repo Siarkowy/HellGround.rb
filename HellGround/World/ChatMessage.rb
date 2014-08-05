@@ -5,7 +5,6 @@
 module HellGround::World
   # Chat message object.
   class ChatMessage
-    CHAT_MSG_ADDON                  = 0xFFFFFFFF
     CHAT_MSG_SYSTEM                 = 0x00
     CHAT_MSG_SAY                    = 0x01
     CHAT_MSG_PARTY                  = 0x02
@@ -55,18 +54,24 @@ module HellGround::World
     CHAT_MSG_RESTRICTED             = 0x2E
 
     ChatTypes = {
-      CHAT_MSG_ADDON    => "Addon",
-      CHAT_MSG_CHANNEL  => "Channel",
-      CHAT_MSG_GUILD    => "Guild",
-      CHAT_MSG_OFFICER  => "Officer",
-      CHAT_MSG_PARTY    => "Party",
-      CHAT_MSG_SAY      => "Say",
-      CHAT_MSG_SYSTEM   => "System",
-      CHAT_MSG_YELL     => "Yell",
-      CHAT_MSG_WHISPER  => "Whisper From",
-      CHAT_MSG_REPLY    => "Whisper To",
+      CHAT_MSG_BATTLEGROUND         => "Battleground",
+      CHAT_MSG_BATTLEGROUND_LEADER  => "Battleground Leader",
+      CHAT_MSG_CHANNEL              => "Channel",
+      CHAT_MSG_TEXT_EMOTE           => "Emote",
+      CHAT_MSG_GUILD                => "Guild",
+      CHAT_MSG_OFFICER              => "Officer",
+      CHAT_MSG_PARTY                => "Party",
+      CHAT_MSG_RAID                 => "Raid",
+      CHAT_MSG_RAID_LEADER          => "Raid Warning",
+      CHAT_MSG_RAID_WARNING         => "Raid Warning",
+      CHAT_MSG_SAY                  => "Say",
+      CHAT_MSG_SYSTEM               => "System",
+      CHAT_MSG_YELL                 => "Yell",
+      CHAT_MSG_WHISPER              => "Whisper From",
+      CHAT_MSG_REPLY                => "Whisper To",
     }
 
+    LANG_ADDON  = 0xFFFFFFFF
     LANG_COMMON = 7
     LANG_ORCISH = 1
 

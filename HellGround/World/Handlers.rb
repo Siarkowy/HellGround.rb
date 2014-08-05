@@ -129,7 +129,7 @@ module HellGround::World
       end
 
       puts 'Guild roster:'
-      puts @guild
+      puts @guild.online.map { |guid, char| char.to_s }.join("\n")
     end
 
     def SMSG_ITEM_QUERY_SINGLE_RESPONSE(pk)
@@ -143,12 +143,20 @@ module HellGround::World
     def SMSG_LOGIN_VERIFY_WORLD(pk)
       puts "Login successful."
 
+      @chat     = ChatMgr.new self
+      @guild    = GuildMgr.new self
+      @social   = SocialMgr.new self
+
       send_data Packets::ClientGuildRoster.new
       @chat.join "world"
     end
 
     def SMSG_LOGOUT_COMPLETE(pk)
-      @player = nil
+      @player   = nil
+      @chat     = nil
+      @guild    = nil
+      @social   = nil
+
       puts "Logout successful."
 
       send_data Packets::ClientCharEnum.new
