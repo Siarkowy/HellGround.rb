@@ -117,7 +117,7 @@ module HellGround
     def str
       ret = @data[@pos..(@data.index("\0", @pos))] # read with \0
       @pos += ret.length
-      ret.delete("\0") # discard \0
+      ret.delete("\0").force_encoding('utf-8') # discard \0
     end
 
     # Converts big-endian packed bytes into a number.
