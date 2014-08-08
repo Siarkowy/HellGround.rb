@@ -1,4 +1,4 @@
-# HellGround.rb, HellGround Core chat client written in Ruby
+# HellGround.rb, WoW protocol implementation in Ruby
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
@@ -100,7 +100,7 @@ module HellGround::World
       char = Character.find(@guid)
       type = @type == CHAT_MSG_CHANNEL ? @to : ChatTypes[@type] || 'Unknown'
 
-      format "%s <%s>%s %s", Time.now.strftime("%F %H:%M"), type, char ? ' ' + char.name + ':' : '', escaped
+      format "<%s>%s %s", type, char ? ' ' + char.name + ':' : '', escaped
     end
   end
 end

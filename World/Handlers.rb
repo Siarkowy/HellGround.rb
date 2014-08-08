@@ -1,4 +1,4 @@
-# HellGround.rb, HellGround Core chat client written in Ruby
+# HellGround.rb, WoW protocol implementation in Ruby
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
@@ -13,6 +13,8 @@ module HellGround::World
   # are not encrypted. All numeric data is little endian. Only the packet
   # size field of the header is sent as big endian.
   module Handlers
+    attr_reader :chars
+
     def SMSG_AUTH_CHALLENGE(pk)
       raise Packet::MalformedError unless pk.length == 8
 
@@ -36,7 +38,7 @@ module HellGround::World
       type  = pk.uint8
       name  = pk.str
 
-      puts ChannelNotification.new(type, name)
+      notify :channel_notification_received, ChannelNotification.new(type, name)
     end
 
     def SMSG_CHAR_ENUM(pk)
@@ -55,23 +57,21 @@ module HellGround::World
         @chars << Player.new(guid, name, level, race, cls)
       end
 
-      if HellGround::CHAR
-        player = @chars.select { |player| player.to_char.name == HellGround::CHAR }.first
+      notify :character_enum, self
+    end
 
-        if player
-          @player = player
-
-          puts "Logging in as #{player.to_char.name}."
-          send_data Packets::ClientPlayerLogin.new(player)
-        end
-      else
-        puts "Select character:"
-        @chars.each { |player| puts " > #{player.to_char}" }
+    def login(name)
+      if player = @chars.select { |player| player.to_char.name == name }.first
+        @player = player
+        send_data Packets::ClientPlayerLogin.new(player)
+        return true
       end
+
+      false
     end
 
     def SMSG_CHAT_PLAYER_NOT_FOUND(pk)
-      puts "Player #{pk.str} not found."
+      notify :player_not_found, pk.str
     end
 
     def SMSG_CONTACT_LIST(pk)
@@ -128,8 +128,7 @@ module HellGround::World
         @guild.update(guid, name, nil, cls, online, rank, level, zone, offline_time, note, onote)
       end
 
-      puts 'Guild roster:'
-      puts @guild.online.map { |guid, char| char.to_s }.join("\n")
+      notify :guild_updated, @guild
     end
 
     def SMSG_ITEM_QUERY_SINGLE_RESPONSE(pk)
@@ -141,7 +140,7 @@ module HellGround::World
     end
 
     def SMSG_LOGIN_VERIFY_WORLD(pk)
-      puts "Login successful."
+      notify :login_succeeded
 
       @chat     = ChatMgr.new self
       @guild    = GuildMgr.new self
@@ -157,7 +156,7 @@ module HellGround::World
       @guild    = nil
       @social   = nil
 
-      puts "Logout successful."
+      notify :logout_succeeded
 
       send_data Packets::ClientCharEnum.new
     end
@@ -184,7 +183,10 @@ module HellGround::World
     end
 
     def SMSG_MOTD(pk)
-      pk.uint32.times { puts "<MOTD> #{pk.str}" }
+      motd = []
+      pk.uint32.times { motd << pk.str }
+
+      notify :motd_received, motd.join("\n")
     end
 
     def SMSG_NAME_QUERY_RESPONSE(pk)
@@ -197,7 +199,7 @@ module HellGround::World
     end
 
     def SMSG_NOTIFICATION(pk)
-      puts "<Notification> #{pk.str}"
+      notify :server_notification_received, pk.str
     end
   end
 end

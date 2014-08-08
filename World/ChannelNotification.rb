@@ -1,4 +1,4 @@
-# HellGround.rb, HellGround Core chat client written in Ruby
+# HellGround.rb, WoW protocol implementation in Ruby
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 

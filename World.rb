@@ -1,4 +1,4 @@
-# HellGround.rb, HellGround Core chat client written in Ruby
+# HellGround.rb, WoW protocol implementation in Ruby
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
@@ -26,20 +26,25 @@ module HellGround::World
   end
 
   class Connection < EM::Connection
-    include HellGround::SlashCommands
     include HellGround::Utils
-
     include Handlers
 
-    def initialize(username, key)
-      @key      = key
+    attr_writer :callbacks
+
+    def initialize(app, username, key, callbacks)
+      extend HellGround::Callbacks
+
+      @app = app
+      @callbacks = callbacks # use provided callback hash
+
+      @key = key
       @username = username
 
       @buf = ''
     end
 
     def post_init
-      puts "World connection opened."
+      notify :world_opened
     end
 
     def receive_data(data)
@@ -77,7 +82,7 @@ module HellGround::World
     end
 
     def receive_packet(pk)
-      puts pk if HellGround::VERBOSE
+      notify :packet_received, pk
 
       opcode = HellGround::Opcodes.name(pk.opcode).to_sym
       handle = method_if_exists(opcode) if opcode
@@ -88,7 +93,7 @@ module HellGround::World
     end
 
     def send_data(pk)
-      puts pk if HellGround::VERBOSE
+      notify :packet_sent, pk
 
       pk[0..5] = @crypto.encrypt pk[0..5] unless @crypto.nil?
 

@@ -1,4 +1,9 @@
-# HellGround.rb, HellGround Core chat client written in Ruby
+#  _  _     _ _  ___                      _       _
+# | || |___| | |/ __|_ _ ___ _  _ _ _  __| |  _ _| |__
+# | __ / -_) | | (_ | '_/ _ \ || | ' \/ _` |_| '_| '_ \
+# |_||_\___|_|_|\___|_| \___/\_,_|_||_\__,_(_)_| |_.__/
+#
+# HellGround.rb, WoW protocol implementation in Ruby
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,16 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-require_relative 'hellground/connection'
+require 'hexdump'
 
-puts %q<
- _  _     _ _  ___                      _       _    
-| || |___| | |/ __|_ _ ___ _  _ _ _  __| |  _ _| |__ 
-| __ / -_) | | (_ | '_/ _ \\ || | ' \\/ _` |_| '_| '_ \\
-|_||_\\___|_|_|\\___|_| \\___/\\_,_|_||_\\__,_(_)_| |_.__/
-
-HellGround Core Ruby Chat Client ____ Siarkowy, 2014
-
->
-
-HellGround::connect!
+require_relative 'Utils'
+require_relative 'Callbacks'
+require_relative 'Auth'
+require_relative 'World'

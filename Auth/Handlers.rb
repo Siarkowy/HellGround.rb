@@ -1,4 +1,4 @@
-# HellGround.rb, HellGround Core chat client written in Ruby
+# HellGround.rb, WoW protocol implementation in Ruby
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
@@ -113,6 +113,8 @@ module HellGround::Auth
     end
 
     def OnLogonProof(pk)
+      @password = nil
+
       result = pk.uint8
       raise AuthError, RESULT_STRING[result] unless result == RESULT_SUCCESS
 
@@ -124,7 +126,7 @@ module HellGround::Auth
       stop! unless m2 == @m2 # check server key
       @m2 = nil
 
-      puts "Authentication successful. Requesting realm list."
+      notify :auth_succeeded
 
       send_data ClientRealmList.new
     end
@@ -156,7 +158,7 @@ module HellGround::Auth
 
         if flags & REALM_FLAG_SKIP == 0 # && lock == 0
           host, port = addr.split(':')
-          puts "Discovered realm #{name} at #{addr}."
+          notify :realmlist_discovered, name, addr
           @realms << [name, host, port.to_i]
         end
       end
@@ -165,10 +167,11 @@ module HellGround::Auth
 
       # connect to the first available server
       name, host, port = @realms[0]
-      puts "Connecting to world server #{name} at #{host}:#{port}."
+      notify :realmlist_selected, name, host, port
 
       close_connection
-      $conn = EM::connect host, port, HellGround::World::Connection, @username, @key
+      conn = EM::connect host, port, HellGround::World::Connection, @app, @username, @key, @callbacks
+      notify :reconnected, conn
     end
 
     SMSG_HANDLERS = {

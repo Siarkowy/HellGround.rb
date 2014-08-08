@@ -1,4 +1,4 @@
-# HellGround.rb, HellGround Core chat client written in Ruby
+# HellGround.rb, WoW protocol implementation in Ruby
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
@@ -11,29 +11,29 @@ require_relative 'Auth/Handlers'
 require_relative 'Auth/Packets'
 
 module HellGround::Auth
-  REALM_IP = '192.168.1.2'
-  REALM_PORT = 3724
-
   class Connection < EM::Connection
     include Handlers
     include HellGround::Utils
 
-    def initialize(username, password)
+    attr_writer :callbacks
+
+    def initialize(app, username, password)
+      extend HellGround::Callbacks
+
+      @app      = app
       @username = username.upcase
       @password = password.upcase
+
+      yield self if block_given?
     end
 
     def post_init
-      puts "Connecting to realm server at #{REALM_IP}:#{REALM_PORT}."
       send_data ClientLogonChallenge.new(@username)
-    rescue => e
-      puts "Error: #{e.message}"
-      stop!
     end
 
     def receive_data(data)
       pk = Packet.new(data)
-      puts pk if HellGround::VERBOSE
+      notify :packet_received, pk
 
       handler = SMSG_HANDLERS[pk.uint8]
       method(handler).call(pk) if handler
@@ -46,7 +46,7 @@ module HellGround::Auth
     end
 
     def send_data(pk)
-      puts pk if HellGround::VERBOSE
+      notify :packet_sent, pk
       super(pk.data)
     end
 
