@@ -38,10 +38,7 @@ module HellGround::Auth
       handler = SMSG_HANDLERS[pk.uint8]
       method(handler).call(pk) if handler
     rescue AuthError => e
-      puts "Authentication error: #{e.message}."
-      stop!
-    rescue => e
-      puts e.message
+      notify :auth_error, e
       stop!
     end
 

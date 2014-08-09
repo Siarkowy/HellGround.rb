@@ -89,7 +89,7 @@ module HellGround::World
       handle = method_if_exists(opcode) if opcode
       handle.call(pk.skip(4)) if handle
     rescue AuthError => e
-      puts "Authentication error: #{e.message}."
+      notify :auth_error, e
       stop!
     end
 
@@ -102,8 +102,8 @@ module HellGround::World
     end
 
     def unbind
-      puts "World connection closed."
       stop!
+      notify :world_closed
     end
 
     def stop!

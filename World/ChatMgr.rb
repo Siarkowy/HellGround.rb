@@ -16,7 +16,7 @@ module HellGround::World
     # Informs chat manager about new character. Flushes messages sent by that character.
     # @param char [Character] Character object.
     def introduce(char)
-      @queue.select { |msg| msg.guid == char.guid }.each { |msg| puts msg }
+      @queue.select { |msg| msg.guid == char.guid }.each { |msg| @owner.notify :message_received, msg }
     end
 
     # Joins a channel.
