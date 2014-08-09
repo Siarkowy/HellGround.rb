@@ -34,9 +34,7 @@ module HellGround::Auth
     def receive_data(data)
       pk = Packet.new(data)
       notify :packet_received, pk
-
-      handler = SMSG_HANDLERS[pk.uint8]
-      method(handler).call(pk) if handler
+      dispatch(pk.reset)
     rescue AuthError => e
       notify :auth_error, e
       stop!

@@ -58,7 +58,22 @@ module HellGround::Auth
   CRC_HASH = 0x79776f6b72616953077962073e3c0762722e4748
 
   module Handlers # Server packet handlers
-    def OnLogonChallenge(pk)
+    private
+
+    SMSG_HANDLERS = {}
+
+    public
+
+    def self.on(opcode, &handler)
+      SMSG_HANDLERS[opcode] = handler
+    end
+
+    def dispatch(pk)
+      handler = SMSG_HANDLERS[pk.uint8]
+      instance_exec(pk, &handler) if handler
+    end
+
+    on MSG::MSG_AUTH_LOGON_CHALLENGE do |pk|
       result = pk.skip(1).uint8
       raise StandardError, RESULT_STRING[result] unless result == RESULT_SUCCESS
 
@@ -112,7 +127,7 @@ module HellGround::Auth
       send_data ClientLogonProof.new(a, m1, CRC_HASH)
     end
 
-    def OnLogonProof(pk)
+    on MSG::MSG_AUTH_LOGON_PROOF do |pk|
       @password = nil
 
       result = pk.uint8
@@ -131,7 +146,7 @@ module HellGround::Auth
       send_data ClientRealmList.new
     end
 
-    def OnRealmList(pk)
+    on MSG::MSG_REALM_LIST do |pk|
       @realms = []
 
       size = pk.uint16
@@ -173,11 +188,5 @@ module HellGround::Auth
       conn = EM::connect host, port, HellGround::World::Connection, @app, @username, @key, @callbacks
       notify :reconnected, conn
     end
-
-    SMSG_HANDLERS = {
-      MSG::MSG_AUTH_LOGON_CHALLENGE => :OnLogonChallenge,
-      MSG::MSG_AUTH_LOGON_PROOF     => :OnLogonProof,
-      MSG::MSG_REALM_LIST           => :OnRealmList,
-    }
   end
 end

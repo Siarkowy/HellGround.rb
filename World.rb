@@ -2,28 +2,32 @@
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
-require_relative 'World/Includes'
-
 # World related code.
 module HellGround::World
   module SMSG
-    SMSG_AUTH_CHALLENGE         = 0x01EC
-    SMSG_CHAR_ENUM              = 0x003B
-    SMSG_NAME_QUERY_RESPONSE    = 0x0051
-    SMSG_CONTACT_LIST           = 0x0067
-    SMSG_FRIEND_STATUS          = 0x0068
-    SMSG_GUILD_ROSTER           = 0x008A
-    SMSG_GUILD_EVENT            = 0x0092
-    SMSG_MESSAGECHAT            = 0x0096
-    SMSG_CHANNEL_NOTIFY         = 0x0099
-    SMSG_CHANNEL_LIST           = 0x009B
-    SMSG_NOTIFICATION           = 0x01CB
-    SMSG_AUTH_RESPONSE          = 0x01EE
-    SMSG_LOGIN_VERIFY_WORLD     = 0x0236
-    SMSG_CHAT_PLAYER_NOT_FOUND  = 0x02A9
-    SMSG_USERLIST_ADD           = 0x03EF
-    SMSG_USERLIST_UPDATE        = 0x03F1
+    SMSG_AUTH_CHALLENGE               = 0x01EC
+    SMSG_CHAR_ENUM                    = 0x003B
+    SMSG_LOGOUT_COMPLETE              = 0x004D
+    SMSG_NAME_QUERY_RESPONSE          = 0x0051
+    SMSG_ITEM_QUERY_SINGLE_RESPONSE   = 0x0058
+    SMSG_QUEST_QUERY_RESPONSE         = 0x005D
+    SMSG_CONTACT_LIST                 = 0x0067
+    SMSG_FRIEND_STATUS                = 0x0068
+    SMSG_GUILD_ROSTER                 = 0x008A
+    SMSG_GUILD_EVENT                  = 0x0092
+    SMSG_MESSAGECHAT                  = 0x0096
+    SMSG_CHANNEL_NOTIFY               = 0x0099
+    SMSG_CHANNEL_LIST                 = 0x009B
+    SMSG_NOTIFICATION                 = 0x01CB
+    SMSG_AUTH_RESPONSE                = 0x01EE
+    SMSG_LOGIN_VERIFY_WORLD           = 0x0236
+    SMSG_CHAT_PLAYER_NOT_FOUND        = 0x02A9
+    SMSG_MOTD                         = 0x033D
+    SMSG_USERLIST_ADD                 = 0x03EF
+    SMSG_USERLIST_UPDATE              = 0x03F1
   end
+
+  require_relative 'World/Includes'
 
   class Connection < EM::Connection
     attr_reader :chars, :chat, :guild, :social
@@ -76,18 +80,9 @@ module HellGround::World
       end
     end
 
-    def method_if_exists(sym)
-      method(sym)
-    rescue => e
-      nil
-    end
-
     def receive_packet(pk)
       notify :packet_received, pk
-
-      opcode = HellGround::Opcodes.name(pk.opcode).to_sym
-      handle = method_if_exists(opcode) if opcode
-      handle.call(pk.skip(4)) if handle
+      dispatch(pk.reset)
     rescue AuthError => e
       notify :auth_error, e
       stop!
