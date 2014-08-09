@@ -143,7 +143,7 @@ module HellGround::World
       @social   = SocialMgr.new self
 
       send_data Packets::ClientGuildRoster.new
-      notify :login_succeeded
+      notify :login_succeeded, self
     end
 
     def SMSG_LOGOUT_COMPLETE(pk)
