@@ -26,10 +26,11 @@ module HellGround::World
   end
 
   class Connection < EM::Connection
+    attr_reader :chars, :chat, :guild, :social
+    attr_writer :callbacks
+
     include HellGround::Utils
     include Handlers
-
-    attr_writer :callbacks
 
     def initialize(app, username, key, callbacks)
       extend HellGround::Callbacks

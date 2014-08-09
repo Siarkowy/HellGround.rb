@@ -13,8 +13,6 @@ module HellGround::World
   # are not encrypted. All numeric data is little endian. Only the packet
   # size field of the header is sent as big endian.
   module Handlers
-    attr_reader :chars
-
     def SMSG_AUTH_CHALLENGE(pk)
       raise Packet::MalformedError unless pk.length == 8
 
@@ -140,14 +138,12 @@ module HellGround::World
     end
 
     def SMSG_LOGIN_VERIFY_WORLD(pk)
-      notify :login_succeeded
-
       @chat     = ChatMgr.new self
       @guild    = GuildMgr.new self
       @social   = SocialMgr.new self
 
       send_data Packets::ClientGuildRoster.new
-      @chat.join "world"
+      notify :login_succeeded
     end
 
     def SMSG_LOGOUT_COMPLETE(pk)
@@ -156,9 +152,8 @@ module HellGround::World
       @guild    = nil
       @social   = nil
 
-      notify :logout_succeeded
-
       send_data Packets::ClientCharEnum.new
+      notify :logout_succeeded
     end
 
     def SMSG_QUEST_QUERY_RESPONSE(pk)
