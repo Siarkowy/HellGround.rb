@@ -25,7 +25,7 @@ module HellGround::World
       return unless @channels.count < 20
 
       @channels.push channel
-      @owner.send_data Packets::ClientJoinChannel.new(@channels.count, channel)
+      @owner.send_data Packets::ClientJoinChannel.new(@channels.count + 2, channel)
     end
 
     # Leaves a channel.
@@ -35,7 +35,7 @@ module HellGround::World
 
       return unless index
 
-      @owner.send_data Packets::ClientLeaveChannel.new(index, channel)
+      @owner.send_data Packets::ClientLeaveChannel.new(index + 2, channel)
       @channels[index] = nil
     end
 
