@@ -27,7 +27,7 @@ module HellGround::World
     SMSG_USERLIST_UPDATE              = 0x03F1
   end
 
-  require_relative 'World/Includes'
+  require_relative 'world/includes'
 
   class Connection < EM::Connection
     attr_reader :chars, :chat, :guild, :social
