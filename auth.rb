@@ -7,8 +7,8 @@ require_relative 'packet'
 require 'digest/sha1'
 require 'openssl'
 
-require_relative 'Auth/Handlers'
-require_relative 'Auth/Packets'
+require_relative 'auth/handlers'
+require_relative 'auth/packets'
 
 module HellGround::Auth
   class Connection < EM::Connection

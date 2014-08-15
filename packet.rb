@@ -2,7 +2,7 @@
 # Copyright (C) 2014 Siarkowy <siarkowy@siarkowy.net>
 # See LICENSE file for more information on licensing.
 
-require_relative 'Opcodes'
+require_relative 'opcodes'
 
 module HellGround
   # WoW packet object.

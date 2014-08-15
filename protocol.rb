@@ -21,7 +21,7 @@
 
 require 'eventmachine'
 
-require_relative 'Utils'
-require_relative 'Callbacks'
-require_relative 'Auth'
-require_relative 'World'
+require_relative 'utils'
+require_relative 'callbacks'
+require_relative 'auth'
+require_relative 'world'
