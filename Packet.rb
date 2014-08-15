@@ -27,12 +27,6 @@ module HellGround
       @data[key] = value
     end
 
-    # Displays packet info: header and contents as hex dump.
-    def dump
-       puts self
-       data.hexdump
-    end
-
     # Returns num bytes of data from packet and increments position by num.
     def get(num = 1)
       ret = @data[@pos..(@pos+num-1)]
