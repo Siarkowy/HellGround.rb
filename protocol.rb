@@ -21,6 +21,10 @@
 
 require 'eventmachine'
 
+module HellGround
+  VERSION = '1.0.0'
+end
+
 require_relative 'utils'
 require_relative 'callbacks'
 require_relative 'auth'
