@@ -19,6 +19,12 @@ Feel free to read the documentation in your browser using:
 yard server
 ```
 
+Sample usage
+------------
+
+Check out the source code of [WoWTTY](https://github.com/Siarkowy/WowTTY)
+console chat client for sample usage.
+
 License
 -------
 
