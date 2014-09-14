@@ -75,7 +75,7 @@ module HellGround::Auth
 
     on MSG::MSG_AUTH_LOGON_CHALLENGE do |pk|
       result = pk.skip(1).uint8
-      raise StandardError, RESULT_STRING[result] unless result == RESULT_SUCCESS
+      raise AuthError, RESULT_STRING[result] unless result == RESULT_SUCCESS
 
       b = pk.hex(32)    # B
      _g = pk.uint8      # size of g
