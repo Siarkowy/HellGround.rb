@@ -39,6 +39,10 @@ module HellGround::World
       @cls    = cls
     end
 
+    def online?
+      @status & FRIEND_STATUS_ONLINE > 0
+    end
+
     def to_char
       Character.find(@guid)
     end

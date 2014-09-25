@@ -37,6 +37,12 @@ module HellGround::World
       @data.select { |guid, social| social.flags & SocialInfo::SOCIAL_FLAG_FRIEND > 0 }
     end
 
+    # Returns online friends.
+    # @return [Hash<Fixnum, SocialInfo>] Friend info.
+    def online
+      @data.select { |guid, social| social.flags & SocialInfo::SOCIAL_FLAG_FRIEND > 0 && social.online? }
+    end
+
     def ignore(name)
       # return if @data.select { |guid, social| social.to_char.name == name }.first
       @owner.send_data Packets::ClientAddIgnore.new(name)
