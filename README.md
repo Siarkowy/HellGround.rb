@@ -1,29 +1,21 @@
 HellGround.rb
 =============
 
-WoW protocol implementation in Ruby. Compatible with HellGround Core,
-Trinity Core based MMORPG emulation framework.
+WoW protocol implementation in Ruby written by Siarkowy.
+
+Compatible with HellGround Core, Trinity Core based MMORPG emulation framework.
 
 Documentation
 -------------
 
-You can easily generate YARD documentation by executing:
+You can easily generate YARD documentation with `yardoc .`
 
-```
-yardoc .
-```
-
-Feel free to read the documentation in your browser using:
-
-```
-yard server
-```
+Feel free to start documentation server for browsing using `yard server` command.
 
 Sample usage
 ------------
 
-Check out the source code of [WoWTTY](https://github.com/Siarkowy/WowTTY)
-console chat client for sample usage.
+[WoWTTY](https://github.com/Siarkowy/WowTTY) is a sample implementation of console chat client.
 
 License
 -------
