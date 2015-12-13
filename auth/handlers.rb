@@ -186,6 +186,8 @@ module HellGround::Auth
 
       close_connection
       conn = EM::connect host, port, HellGround::World::Connection, @app, @username, @key, @callbacks
+      conn.pending_connect_timeout = 5
+      conn.comm_inactivity_timeout = 5
       notify :reconnected, conn
     end
   end
