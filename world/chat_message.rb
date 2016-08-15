@@ -96,11 +96,26 @@ module HellGround::World
       @text.gsub(/\|c.{8}|\|r/, '')
     end
 
-    def to_s
+    # Converts chat message object to string using specified format string.
+    # @param fmt [String] Chat message template string.
+    # @return [String] String representation of chat message object.
+    def to_s(fmt = nil)
+      fmt ||= '<%{type}> %{char}%{sep}%{text}'
+
       char = Character.find(@guid)
       type = @type == CHAT_MSG_CHANNEL ? @to : ChatTypes[@type] || 'Unknown'
 
-      format "<%s>%s %s", type, char ? ' ' + char.name + ':' : '', escaped
+      fmt % {
+        type: type,
+        char: char ? char.name : '',
+        sep: char ? ': ' : '',
+        text: escaped,
+        rawtype: @type,
+        lang: @lang,
+        guid: @guid,
+        rawtext: @text,
+        to: @to,
+      }
     end
   end
 end
