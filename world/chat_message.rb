@@ -100,14 +100,14 @@ module HellGround::World
     # @param fmt [String] Chat message template string.
     # @return [String] String representation of chat message object.
     def to_s(fmt = nil)
-      fmt ||= '<%{type}> %{char}%{sep}%{text}'
+      fmt ||= '<%{type}> %{sender}%{sep}%{text}'
 
       char = Character.find(@guid)
       type = @type == CHAT_MSG_CHANNEL ? @to : ChatTypes[@type] || 'Unknown'
 
       fmt % {
         type: type,
-        char: char ? char.name : '',
+        sender: char ? char.name : '',
         sep: char ? ': ' : '',
         text: escaped,
         rawtype: @type,
