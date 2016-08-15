@@ -42,8 +42,6 @@ module HellGround::World
     # Displays chat message if the author is known. Enqueues the message and
     # queries the server for the client name otherwise.
     def receive(msg)
-      return if msg.lang == ChatMessage::LANG_ADDON
-
       if Character.find(msg.guid) || msg.guid == 0
         @owner.notify :message_received, msg
       else
