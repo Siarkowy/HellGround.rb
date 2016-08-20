@@ -36,13 +36,20 @@ module HellGround::Auth
       notify :packet_received, pk
       dispatch(pk.reset)
     rescue AuthError => e
-      notify :auth_error, e
       stop!
+      notify :auth_error, e
     end
 
     def send_data(pk)
       notify :packet_sent, pk
       super(pk.data)
+    end
+
+    def unbind errno
+      if errno == Errno::ECONNREFUSED
+        stop!
+        notify :auth_error, AuthError.new("Connection refused (server probably offline)")
+      end
     end
 
     def stop!
