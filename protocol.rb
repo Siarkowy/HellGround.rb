@@ -22,7 +22,7 @@
 require 'eventmachine'
 
 module HellGround
-  VERSION = '1.0.0'
+  VERSION = '1.3'
 end
 
 require_relative 'utils'
